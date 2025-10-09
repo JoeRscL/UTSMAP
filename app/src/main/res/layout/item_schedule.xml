@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    android:background="@drawable/bg_card"
+    android:layout_marginBottom="12dp">
+
+    <TextView android:id="@+id/tvTitle" android:textStyle="bold" android:textSize="18sp" android:textColor="#000" />
+    <TextView android:id="@+id/tvDate" android:textColor="#888" android:layout_marginTop="4dp"/>
+    <TextView android:id="@+id/tvTime" android:textColor="#444" android:layout_marginTop="4dp"/>
+    <TextView android:id="@+id/tvPriority" android:textColor="#FF9800" android:layout_marginTop="4dp"/>
+    <TextView android:id="@+id/tvCategory" android:textColor="#03A9F4" android:layout_marginTop="4dp"/>
+
+</LinearLayout>

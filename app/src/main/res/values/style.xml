@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- contoh theme sederhana (sesuaikan jika kamu punya Theme lain) -->
+    <style name="Theme.MindnestApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#6200EE</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+    </style>
+
+    <!-- style untuk tampilan hari — TIDAK berisi atribut layout_* -->
+    <style name="DayText">
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">#333333</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:background">@drawable/bg_day_circle</item>
+        <item name="android:padding">4dp</item>
+    </style>
+
+</resources>
