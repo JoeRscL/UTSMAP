@@ -1,4 +1,4 @@
-package com.example.mindnest
+package com.example.mindnestapp
 
 import android.os.Bundle
 import android.widget.LinearLayout

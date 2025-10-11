@@ -1,20 +1,29 @@
-//package com.example.mindnestapp
-//
-//import android.content.Intent
-//import android.os.Bundle
-//import android.widget.Button
-//import androidx.appcompat.app.AppCompatActivity
-//
-//class register : AppCompatActivity() {
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        setContentView(R.layout.activity_register)
-//
-//        val btnDaftar = findViewById<Button>(R.id.btnDaftar)
-//        btnDaftar.setOnClickListener {
-//            val intent = Intent(this, ScheduleActivity::class.java)
-//            startActivity(intent)
-//            finish()
-//        }
-//    }
-//}
+package com.example.mindnestapp
+
+import android.content.Intent
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import com.example.mindnestapp.databinding.ActivityRegisterBinding
+
+class register : AppCompatActivity() {
+
+    private lateinit var binding: ActivityRegisterBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityRegisterBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.btnDaftar.setOnClickListener {
+            // arahkan ke ScheduleActivity
+            val intent = Intent(this, login::class.java)
+            startActivity(intent)
+        }
+
+        binding.tvLogin.setOnClickListener {
+            // arahkan ke login (bukan LoginActivity)
+            val intent = Intent(this, login::class.java)
+            startActivity(intent)
+        }
+    }
+}
