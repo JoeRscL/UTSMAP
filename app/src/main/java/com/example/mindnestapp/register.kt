@@ -15,13 +15,11 @@ class register : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.btnDaftar.setOnClickListener {
-            // arahkan ke ScheduleActivity
             val intent = Intent(this, login::class.java)
             startActivity(intent)
         }
 
         binding.tvLogin.setOnClickListener {
-            // arahkan ke login (bukan LoginActivity)
             val intent = Intent(this, login::class.java)
             startActivity(intent)
         }
