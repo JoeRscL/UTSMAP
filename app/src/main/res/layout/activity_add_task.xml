@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/footerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:orientation="horizontal"
+    android:background="#EAEAEA"
+    android:gravity="center"
+    android:padding="8dp">
+
+    <!-- HEADER -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:orientation="vertical"
+        android:background="#0D2C6B"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="09:09"
+            android:textSize="32sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:layout_marginTop="6dp">
+
+            <ImageView
+                android:id="@+id/btnPrevMonth"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@android:drawable/ic_media_previous"
+                android:tint="#FFFFFF" />
+
+            <TextView
+                android:id="@+id/tvMonthYear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="October 2025"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginHorizontal="16dp" />
+
+            <ImageView
+                android:id="@+id/btnNextMonth"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@android:drawable/ic_media_next"
+                android:tint="#FFFFFF" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- NAMA HARI -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingTop="10dp"
+        android:paddingBottom="5dp">
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="S" android:textStyle="bold" android:layout_margin="4dp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="M" android:textStyle="bold" android:layout_margin="4dp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textStyle="bold" android:layout_margin="4dp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="W" android:textStyle="bold" android:layout_margin="4dp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textStyle="bold" android:layout_margin="4dp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="F" android:textStyle="bold" android:layout_margin="4dp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="S" android:textStyle="bold" android:layout_margin="4dp" />
+    </LinearLayout>
+
+    <!-- GRID KALENDER -->
+    <GridLayout
+        android:id="@+id/calendarGrid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="7"
+        android:paddingHorizontal="8dp"
+        android:paddingBottom="10dp" />
+
+    <!-- LIST JADWAL -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Dummy Schedule -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="09:00 AM - 10:30 AM"
+                android:textSize="14sp"
+                android:textColor="#0D2C6B"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Team Meeting"
+                android:textSize="16sp"
+                android:textColor="#000000"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="10:45 AM - 11:30 AM"
+                android:textSize="14sp"
+                android:textColor="#0D2C6B"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Doctor Appointment"
+                android:textSize="16sp"
+                android:textColor="#000000"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="02:00 PM - 03:00 PM"
+                android:textSize="14sp"
+                android:textColor="#0D2C6B"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Gym Session"
+                android:textSize="16sp"
+                android:textColor="#000000"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="06:00 PM - 07:30 PM"
+                android:textSize="14sp"
+                android:textColor="#0D2C6B"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dinner with Friends"
+                android:textSize="16sp"
+                android:textColor="#000000"
+                android:layout_marginBottom="12dp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- FOOTER NAV: sementara kosong -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="#EAEAEA" />
+</LinearLayout>

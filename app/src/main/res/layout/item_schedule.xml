@@ -3,45 +3,85 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="12dp"
-    android:background="@android:color/white"
-    android:layout_marginBottom="8dp"
-    android:elevation="2dp">
+    android:padding="16dp"
+    android:background="@drawable/bg_card"
+    android:layout_marginBottom="12dp">
 
     <TextView
         android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:text="Meeting tim projek"
         android:textStyle="bold"
-        android:textSize="18sp" />
+        android:textSize="18sp"
+        android:textColor="#111827"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <TextView
         android:id="@+id/tvDate"
+        android:text="SUNDAY 2 OCT 2025"
+        android:textSize="14sp"
+        android:textColor="#6B7280"
+        android:layout_marginTop="4dp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sunday 2 Oct 2025"
-        android:textSize="14sp" />
+        android:layout_height="wrap_content" />
 
     <TextView
         android:id="@+id/tvTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:text="12:00 AM - 17:00"
-        android:textSize="14sp" />
+        android:textColor="#2563EB"
+        android:textSize="14sp"
+        android:layout_marginTop="4dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <TextView
         android:id="@+id/tvPriority"
+        android:text="MEDIUM"
+        android:textSize="14sp"
+        android:textColor="#F59E0B"
+        android:layout_marginTop="4dp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Medium"
-        android:textSize="14sp" />
+        android:layout_height="wrap_content" />
 
     <TextView
         android:id="@+id/tvCategory"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:text="Work"
-        android:textSize="14sp" />
+        android:textColor="#6B7280"
+        android:textSize="14sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:layout_marginTop="12dp">
+
+        <Button
+            android:text="COMPLETE"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#2563EB"
+            android:layout_marginEnd="6dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:text="SNOOZE"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#F59E0B"
+            android:layout_marginEnd="6dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:text="EDIT"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#6B7280"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
 </LinearLayout>

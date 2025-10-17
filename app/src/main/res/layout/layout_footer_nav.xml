@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/footerNav"
+    android:layout_width="match_parent"
+    android:layout_height="70dp"
+    android:orientation="horizontal"
+    android:background="#0D2C6B"
+    android:gravity="center"
+    android:elevation="8dp"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    >
+
+    <!-- HOME -->
+    <LinearLayout
+        android:id="@+id/navHome"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center">
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_home"
+            android:tint="#FFFFFF"/>
+    </LinearLayout>
+
+    <!-- CALENDAR -->
+    <LinearLayout
+        android:id="@+id/navCalendar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center">
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_calendar"
+            android:tint="#FFFFFF"/>
+    </LinearLayout>
+
+    <!-- ADD BUTTON (Oval Gradient) -->
+    <LinearLayout
+        android:id="@+id/navAdd"
+        android:layout_width="65dp"
+        android:layout_height="40dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/bg_add_button"
+        android:elevation="10dp">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_add"
+            android:tint="#FFFFFF" />
+    </LinearLayout>
+
+    <!-- FILE / ACTIVITY -->
+    <LinearLayout
+        android:id="@+id/navFile"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center">
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_file"
+            android:tint="#FFFFFF"/>
+    </LinearLayout>
+
+    <!-- SETTINGS -->
+    <LinearLayout
+        android:id="@+id/navSettings"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center">
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_settings"
+            android:tint="#FFFFFF"/>
+    </LinearLayout>
+
+</LinearLayout>

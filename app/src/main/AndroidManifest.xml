@@ -5,7 +5,7 @@
     <application
         android:allowBackup="true"
         android:label="@string/app_name"
-        android:icon="@drawable/logo_landing"
+        android:icon="@drawable/logo_login"
         android:roundIcon="@drawable/bg_day_circle"
         android:supportsRtl="true"
         android:theme="@style/Theme.Mindnestapp">
@@ -34,6 +34,10 @@
             android:name=".MainActivity"
             android:exported="false"
             android:theme="@style/Theme.Mindnestapp.SplashScreen" />
+        <activity
+            android:name=".AddTaskActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
     </application>
 
