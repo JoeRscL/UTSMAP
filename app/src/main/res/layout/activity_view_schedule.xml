@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="#FFFFFF"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Header bulan dan tahun -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/btnPrevMonth"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_arrow_left"
+            android:contentDescription="Previous month"
+            android:padding="4dp" />
+
+        <TextView
+            android:id="@+id/tvMonthYear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Oktober 2025"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginHorizontal="16dp"
+            android:textColor="#000000" />
+
+        <ImageView
+            android:id="@+id/btnNextMonth"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_arrow_right"
+            android:contentDescription="Next month"
+            android:padding="4dp" />
+    </LinearLayout>
+
+    <!-- Kalender -->
+    <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+        android:id="@+id/calendarView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:mcv_showOtherDates="all"
+        app:mcv_headerTextAppearance="@style/TextAppearance.MaterialComponents.Body1"
+        app:mcv_weekDayTextAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+
+    <!-- Daftar kegiatan -->
+    <TextView
+        android:id="@+id/tvSelectedDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Kegiatan pada 18 Oktober 2025:"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:layout_marginBottom="8dp" />
+
+    <LinearLayout
+        android:id="@+id/eventList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <!-- Footer (kalau sudah ada, bisa include di bawah ini) -->
+    <include layout="@layout/layout_footer_nav" />
+
+</LinearLayout>

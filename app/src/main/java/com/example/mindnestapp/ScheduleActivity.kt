@@ -8,40 +8,40 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.mindnestapp.R
+import com.google.firebase.database.*
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ScheduleActivity : AppCompatActivity() {
 
     data class Schedule(
-        val title: String,
-        val date: String,
-        val time: String,
-        val priority: String,
-        val category: String
+        val title: String = "",
+        val description: String = "",
+        val date: String = "",
+        val time: String = "",
+        val priority: String = ""
     )
+
+    private lateinit var dayContainer: LinearLayout
+    private lateinit var dayCircles: MutableList<LinearLayout>
+    private lateinit var days: List<String>
+    private lateinit var dateFormat: SimpleDateFormat
+    private lateinit var tempCal: Calendar
+    private var todayIndex: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_schedule)
-        FooterNavHelper(this).setupFooterNavigation()
 
-        // ======================
-        // BAGIAN KALENDER OVAL OTOMATIS + INTERAKTIF
-        // ======================
-        val dayContainer = findViewById<LinearLayout>(R.id.dayContainer)
-        val days = listOf("S", "M", "T", "W", "T", "F", "S")
+        // Inisialisasi kalender
+        dayContainer = findViewById(R.id.dayContainer)
+        dayCircles = mutableListOf()
+        days = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+        dateFormat = SimpleDateFormat("dd", Locale.getDefault())
+        tempCal = Calendar.getInstance()
+        todayIndex = tempCal.get(Calendar.DAY_OF_WEEK) - 1
 
-        val calendar = Calendar.getInstance()
-        val todayIndex = (calendar.get(Calendar.DAY_OF_WEEK) - 1) // 0 = Sunday
-        val dateFormat = SimpleDateFormat("d MMM", Locale.ENGLISH)
-
-        val tempCal = Calendar.getInstance()
-        tempCal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
-
-        val dayCircles = mutableListOf<LinearLayout>()
-        val dayTexts = mutableListOf<Pair<TextView, TextView>>() // (tvDay, tvDate)
+        val dayTexts = mutableListOf<Pair<TextView, TextView>>()
 
         for (i in days.indices) {
             val dayWrapper = LinearLayout(this)
@@ -93,7 +93,6 @@ class ScheduleActivity : AppCompatActivity() {
             dayCircles.add(circle)
             dayTexts.add(tvDay to tvDate)
 
-            // EVENT KLIK UNTUK UBAH HARI AKTIF
             circle.setOnClickListener {
                 for (j in dayCircles.indices) {
                     dayCircles[j].setBackgroundResource(R.drawable.bg_day_unselected)
@@ -108,36 +107,38 @@ class ScheduleActivity : AppCompatActivity() {
             tempCal.add(Calendar.DAY_OF_MONTH, 1)
         }
 
-        // ======================
-        // BAGIAN DAFTAR JADWAL
-        // ======================
+        // Firebase Realtime Database
+        val database = FirebaseDatabase.getInstance()
+        val scheduleRef = database.getReference("schedules")
         val scheduleContainer = findViewById<LinearLayout>(R.id.scheduleContainer)
 
-        val scheduleList = listOf(
-            Schedule("Meeting tim projek", "Sunday 2 Oct 2025", "12:00 AM - 17:00", "Medium", "Work"),
-            Schedule("UI Review", "Monday 3 Oct 2025", "09:00 AM - 11:00", "High", "Design"),
-            Schedule("Lunch with Client", "Monday 3 Oct 2025", "12:00 PM - 13:00", "Low", "Client"),
-            Schedule("Sprint Planning", "Tuesday 4 Oct 2025", "10:00 AM - 12:00", "Medium", "Work"),
-            Schedule("Team Sync", "Wednesday 5 Oct 2025", "14:00 PM - 15:00", "Low", "Work"),
-            Schedule("Testing App", "Thursday 6 Oct 2025", "09:00 AM - 12:00", "Medium", "QA"),
-            Schedule("Fix Bug", "Friday 7 Oct 2025", "10:00 AM - 16:00", "High", "Development"),
-            Schedule("Deployment", "Saturday 8 Oct 2025", "08:00 AM - 10:00", "High", "Ops"),
-            Schedule("Weekly Review", "Sunday 9 Oct 2025", "15:00 PM - 16:00", "Medium", "Work")
-        )
+        scheduleRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                scheduleContainer.removeAllViews() // hapus jadwal lama
+                if (snapshot.exists()) {
+                    for (child in snapshot.children) {
+                        val schedule = child.getValue(Schedule::class.java)
+                        schedule?.let {
+                            val view = layoutInflater.inflate(R.layout.item_schedule, scheduleContainer, false)
+                            view.findViewById<TextView>(R.id.tvTitle).text = it.title
+                            view.findViewById<TextView>(R.id.tvDate).text = it.date
+                            view.findViewById<TextView>(R.id.tvTime).text = it.time
+                            view.findViewById<TextView>(R.id.tvPriority).text = it.priority
+                            view.findViewById<TextView>(R.id.tvCategory).text = it.description
+                            scheduleContainer.addView(view)
+                        }
+                    }
+                } else {
+                    Toast.makeText(this@ScheduleActivity, "Tidak ada data jadwal", Toast.LENGTH_SHORT).show()
+                }
+            }
 
-        for (schedule in scheduleList) {
-            val view = layoutInflater.inflate(R.layout.item_schedule, scheduleContainer, false)
-            view.findViewById<TextView>(R.id.tvTitle).text = schedule.title
-            view.findViewById<TextView>(R.id.tvDate).text = schedule.date
-            view.findViewById<TextView>(R.id.tvTime).text = schedule.time
-            view.findViewById<TextView>(R.id.tvPriority).text = schedule.priority
-            view.findViewById<TextView>(R.id.tvCategory).text = schedule.category
-            scheduleContainer.addView(view)
-        }
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@ScheduleActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
 
-        // ======================
-// FOOTER NAVIGATION (MENU BAWAH)
-// ======================
+        // Footer Navigation
         findViewById<LinearLayout>(R.id.navHome)?.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
@@ -148,7 +149,6 @@ class ScheduleActivity : AppCompatActivity() {
         }
 
         findViewById<LinearLayout>(R.id.navAdd)?.setOnClickListener {
-            // ⬇️ ini bagian pentingnya: pindah ke halaman AddTask
             startActivity(Intent(this, AddTaskActivity::class.java))
         }
 
@@ -159,10 +159,9 @@ class ScheduleActivity : AppCompatActivity() {
         findViewById<LinearLayout>(R.id.navSettings)?.setOnClickListener {
             Toast.makeText(this, "Open Settings", Toast.LENGTH_SHORT).show()
         }
-
     }
 
-    // Fungsi konversi dp ke pixel biar ukuran oval tetap proporsional
+    // fungsi konversi dp ke px
     val Int.dp: Int
         get() = (this * resources.displayMetrics.density).toInt()
 }

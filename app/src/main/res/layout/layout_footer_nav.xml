@@ -58,7 +58,6 @@
             android:tint="#FFFFFF" />
     </LinearLayout>
 
-    <!-- FILE / ACTIVITY -->
     <LinearLayout
         android:id="@+id/navFile"
         android:layout_width="0dp"

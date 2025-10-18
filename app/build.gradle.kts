@@ -2,11 +2,12 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.mindnestapp"
-    compileSdk = 36
+    compileSdk = 36 // versi stabil terbaru
 
     defaultConfig {
         applicationId = "com.example.mindnestapp"
@@ -39,26 +40,40 @@ android {
 
     buildFeatures {
         compose = true
-        viewBinding = true   // ✅ Tambahkan ini
+        viewBinding = true
     }
 }
 
+
+
 dependencies {
+    // Core Android
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.constraintlayout)
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
+    // Lifecycle & Activity
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity)
     implementation(libs.androidx.activity.compose)
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-database:21.0.0")
+    // Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.androidx.activity)
-    implementation(libs.androidx.constraintlayout)
-    implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("androidx.gridlayout:gridlayout:1.0.0")
 
+    // ✅ Kalender — versi yang stabil dan tidak bentrok
+    implementation("com.github.prolificinteractive:material-calendarview:1.6.0")
+    implementation(libs.firebase.database)
+
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
