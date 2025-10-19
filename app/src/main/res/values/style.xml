@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--
+    File ini berisi style untuk komponen UI spesifik.
+    Tema utama aplikasi telah dipindahkan ke themes.xml untuk menghindari duplikasi.
+    -->
 
-    <!-- contoh theme sederhana (sesuaikan jika kamu punya Theme lain) -->
-    <style name="Theme.MindnestApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#6200EE</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-    </style>
-
-    <!-- style untuk tampilan hari — TIDAK berisi atribut layout_* -->
+    <!-- style untuk tampilan hari pada kalender -->
     <style name="DayText">
         <item name="android:gravity">center</item>
         <item name="android:textColor">#333333</item>
@@ -15,6 +13,8 @@
         <item name="android:background">@drawable/bg_day_circle</item>
         <item name="android:padding">4dp</item>
     </style>
+
+    <!-- style untuk header hari pada kalender -->
     <style name="DayHeaderStyle">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
@@ -24,5 +24,6 @@
         <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
     </style>
+
 
 </resources>

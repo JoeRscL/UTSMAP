@@ -1,96 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/footerLayout"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="56dp"
-    android:orientation="horizontal"
-    android:background="#EAEAEA"
-    android:gravity="center"
-    android:padding="8dp">
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    tools:context=".AddTaskActivity">
 
-    <!-- HEADER -->
+    <!-- Header -->
     <LinearLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:orientation="vertical"
-        android:background="#0D2C6B"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:padding="16dp">
 
         <TextView
-            android:id="@+id/tvTime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Add task"
+            android:textColor="#007AFF"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/btnCancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="09:09"
-            android:textSize="32sp"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
-            android:layout_gravity="center_horizontal" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:layout_marginTop="6dp">
-
-            <ImageView
-                android:id="@+id/btnPrevMonth"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@android:drawable/ic_media_previous"
-                android:tint="#FFFFFF" />
-
-            <TextView
-                android:id="@+id/tvMonthYear"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="October 2025"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginHorizontal="16dp" />
-
-            <ImageView
-                android:id="@+id/btnNextMonth"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@android:drawable/ic_media_next"
-                android:tint="#FFFFFF" />
-        </LinearLayout>
+            android:text="Cancel"
+            android:textColor="#FF3B30"
+            android:textSize="17sp" />
     </LinearLayout>
 
-    <!-- NAMA HARI -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:paddingTop="10dp"
-        android:paddingBottom="5dp">
-
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="S" android:textStyle="bold" android:layout_margin="4dp" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="M" android:textStyle="bold" android:layout_margin="4dp" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textStyle="bold" android:layout_margin="4dp" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="W" android:textStyle="bold" android:layout_margin="4dp" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textStyle="bold" android:layout_margin="4dp" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="F" android:textStyle="bold" android:layout_margin="4dp" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="S" android:textStyle="bold" android:layout_margin="4dp" />
-    </LinearLayout>
-
-    <!-- GRID KALENDER -->
-    <GridLayout
-        android:id="@+id/calendarGrid"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnCount="7"
-        android:paddingHorizontal="8dp"
-        android:paddingBottom="10dp" />
-
-    <!-- LIST JADWAL -->
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="match_parent"
+        android:layout_above="@id/footerNav"
+        android:layout_below="@id/headerLayout">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -98,80 +45,216 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Dummy Schedule -->
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Task Title -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="09:00 AM - 10:30 AM"
-                android:textSize="14sp"
-                android:textColor="#0D2C6B"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="16dp"
+                app:boxBackgroundColor="#EBF4FF"
+                app:boxBackgroundMode="filled"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Team Meeting"
-                android:textSize="16sp"
-                android:textColor="#000000"
-                android:layout_marginBottom="12dp" />
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etTaskTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:hint="Finish Report"
+                    android:textColorHint="#8E8E93"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Category Label -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="10:45 AM - 11:30 AM"
-                android:textSize="14sp"
-                android:textColor="#0D2C6B"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="8dp"
+                android:text="Category"
+                android:textColor="#007AFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Category Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Doctor Appointment"
-                android:textSize="16sp"
-                android:textColor="#000000"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="16dp"
+                app:boxBackgroundColor="#EBF4FF"
+                app:boxBackgroundMode="filled"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="02:00 PM - 03:00 PM"
-                android:textSize="14sp"
-                android:textColor="#0D2C6B"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:hint="Work"
+                    android:textColorHint="#8E8E93"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Date Label -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Gym Session"
-                android:textSize="16sp"
-                android:textColor="#000000"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="8dp"
+                android:text="Date"
+                android:textColor="#007AFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Set Due Date -->
+            <LinearLayout
+                android:id="@+id/layoutSetDate"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="06:00 PM - 07:30 PM"
-                android:textSize="14sp"
-                android:textColor="#0D2C6B"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp">
 
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="12dp"
+                    android:src="@android:drawable/ic_menu_my_calendar"
+                    app:tint="#FF9500" />
+
+                <TextView
+                    android:id="@+id/tvSetDate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Set due date"
+                    android:textColor="#8E8E93"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Set Time -->
+            <LinearLayout
+                android:id="@+id/layoutSetTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="12dp"
+                    android:src="@android:drawable/ic_menu_recent_history"
+                    app:tint="#FF3B30" />
+
+                <TextView
+                    android:id="@+id/tvSetTime"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Set Time"
+                    android:textColor="#8E8E93"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Reminder Label -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Dinner with Friends"
-                android:textSize="16sp"
-                android:textColor="#000000"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="8dp"
+                android:text="Reminder"
+                android:textColor="#007AFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <!-- Set Reminder -->
+            <LinearLayout
+                android:id="@+id/layoutSetReminder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="12dp"
+                    android:src="@android:drawable/ic_lock_idle_alarm"
+                    app:tint="#8E8E93" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Set Reminder"
+                    android:textColor="#8E8E93"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Notes Label -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Notes"
+                android:textColor="#007AFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <!-- Notes Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="80dp"
+                app:boxBackgroundColor="#EBF4FF"
+                app:boxBackgroundMode="filled"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etNotes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:gravity="top"
+                    android:hint="Make sure to research from internet"
+                    android:minLines="4"
+                    android:textColorHint="#8E8E93"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
         </LinearLayout>
     </ScrollView>
 
-    <!-- FOOTER NAV: sementara kosong -->
-    <LinearLayout
+    <!-- Floating Action Button Save -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabSave"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="80dp"
+        android:src="@android:drawable/ic_menu_save"
+        app:backgroundTint="#1E3A8A"
+        app:tint="#FFFFFF" />
+
+    <!-- Footer Navigation -->
+    <include
+        android:id="@+id/footerNav"
+        layout="@layout/layout_footer_nav"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="#EAEAEA" />
-</LinearLayout>
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
+
+</RelativeLayout>

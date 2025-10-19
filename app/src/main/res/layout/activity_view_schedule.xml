@@ -68,6 +68,8 @@
         android:orientation="vertical" />
 
     <!-- Footer (kalau sudah ada, bisa include di bawah ini) -->
-    <include layout="@layout/layout_footer_nav" />
+    <include
+        android:id="@+id/footerNav"
+        layout="@layout/layout_footer_nav" />
 
 </LinearLayout>

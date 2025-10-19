@@ -1,19 +1,8 @@
-import org.gradle.kotlin.dsl.maven
-import org.gradle.kotlin.dsl.mavenCentral
-import org.gradle.kotlin.dsl.repositories
-
 pluginManagement {
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
+        google()
         mavenCentral()
         gradlePluginPortal()
-        maven { url = uri("https://jitpack.io") } // ✅ tambahan penting
     }
 }
 
@@ -22,9 +11,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url = uri("https://jitpack.io") } // ✅ tambahan penting
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
-rootProject.name = "mindnestapp"
+rootProject.name = "MindNestApp"
 include(":app")

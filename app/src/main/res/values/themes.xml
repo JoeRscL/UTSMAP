@@ -1,26 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
-
-    <!-- Tema utama aplikasi -->
-    <style name="Theme.Mindnestapp" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">#FFFFFF</item>
-        <item name="android:colorBackground">#FFFFFF</item>
-        <item name="android:textColor">#FFFFFF</item>
-    </style>
-
-    <!-- Tema khusus untuk splash / landing screen -->
-    <style name="Theme.Mindnestapp.SplashScreen" parent="Theme.SplashScreen">
-        <!-- Warna background saat splash -->
-        <item name="windowSplashScreenBackground">#0B3571</item>
-
-        <!-- Logo yang ditampilkan -->
-        <item name="windowSplashScreenAnimatedIcon">@drawable/logo_login</item>
-
-        <!-- Warna status bar (biar nyatu) -->
-        <item name="android:statusBarColor">#0B3571</item>
-
-        <!-- Setelah splash, lanjut ke tema utama -->
-        <item name="postSplashScreenTheme">@style/Theme.Mindnestapp</item>
+<resources>
+    <!--
+    Tema utama aplikasi.
+    Parent theme sudah benar menggunakan MaterialComponents, yang akan memperbaiki
+    error crash saat membuka halaman yang menggunakan komponen Material Design.
+    -->
+    <style name="Theme.MindnestApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Warna utama aplikasi -->
+        <item name="colorPrimary">#6200EE</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <!-- Anda bisa menambahkan kustomisasi lain di sini -->
     </style>
 
 </resources>

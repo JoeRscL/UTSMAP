@@ -85,5 +85,7 @@
             android:layout_height="wrap_content">
         </LinearLayout>
     </ScrollView>
-    <include layout="@layout/layout_footer_nav" />
+    <include
+        android:id="@+id/footerNav"
+        layout="@layout/layout_footer_nav" />
 </LinearLayout>
