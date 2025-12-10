@@ -13,79 +13,88 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="16dp"
-        android:background="#FFFFFF"
-        android:elevation="3dp">
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="24dp"
+        android:background="#F9FAFB">
+
+        <!-- Baris Atas: Tanggal dan Icon Profil -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvDate"
+                android:text="Saturday 2 October 2024"
+                android:textColor="#0056D2"
+                android:textSize="14sp"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" />
+
+            <ImageView
+                android:id="@+id/ivProfileSmall"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_default_profile"
+                android:background="@drawable/bg_circle_outline"
+                android:padding="2dp" /> 
+                <!-- Anda bisa ganti src dengan ic_profile jika ada, atau gunakan CircleImageView -->
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvWelcome"
             android:text="Welcome Back!"
             android:textStyle="bold"
-            android:textSize="22sp"
-            android:textColor="#111827"
+            android:textSize="28sp"
+            android:textColor="#0D2C6B"
+            android:layout_marginTop="16dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <TextView
             android:id="@+id/tvUserName"
             android:text="Hi, Choudary Aoun"
-            android:textSize="16sp"
-            android:textColor="#6B7280"
+            android:textSize="18sp"
+            android:textColor="#111827"
             android:layout_marginTop="4dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
-        <TextView
-            android:id="@+id/tvDate"
-            android:text="Saturday 2 October 2024"
-            android:textColor="#6B7280"
-            android:textSize="14sp"
-            android:layout_marginTop="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/tvTime"
-            android:text="9:30"
-            android:textColor="#2563EB"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:layout_marginTop="2dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
     </LinearLayout>
 
-    <HorizontalScrollView
+    <!-- Kalender Mingguan (Pill Shape) -->
+    <!-- Menggunakan HorizontalScrollView agar aman di layar kecil, tapi di gambar terlihat fit screen -->
+    <LinearLayout
+        android:id="@+id/dayContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
-        android:paddingVertical="12dp"
-        android:elevation="2dp"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:id="@+id/dayContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingHorizontal="12dp" />
-    </HorizontalScrollView>
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:layout_marginBottom="16dp"
+        android:weightSum="7"/>
 
     <!-- Schedule Container -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:paddingHorizontal="16dp">
 
         <LinearLayout
             android:id="@+id/scheduleContainer"
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:paddingBottom="16dp">
         </LinearLayout>
     </ScrollView>
+
+    <!-- Footer Navigation -->
     <include
         android:id="@+id/footerNav"
-        layout="@layout/layout_footer_nav" />
+        layout="@layout/layout_footer_nav"
+        android:layout_width="match_parent"
+        android:layout_height="70dp" />
 </LinearLayout>

@@ -74,10 +74,13 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
 
-    // Kalender
+    // Kalender, Image, etc
     implementation("com.github.prolificinteractive:material-calendarview:1.6.0")
     implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation("com.github.bumptech.glide:glide:4.12.0")
+    
+    // Country Code Picker
+    implementation("com.hbb20:ccp:2.5.1")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

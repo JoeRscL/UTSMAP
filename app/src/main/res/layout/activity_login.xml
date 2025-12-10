@@ -1,141 +1,237 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_gradient">
+    android:background="#FFFFFF">
 
-    <!-- Card Container -->
+    <!-- Latar Belakang Biru Atas (Sekitar 35% tinggi layar) -->
+    <View
+        android:id="@+id/blueBackground"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#0D47A1"
+        app:layout_constraintHeight_percent="0.35"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Container Logo (Rounded Rectangle Putih di atas kartu) -->
+    <!-- Kita letakkan ini SETELAH CardView utama di XML agar z-index nya lebih tinggi (di atas kartu), 
+         ATAU kita atur constraintnya agar menumpang di batas atas kartu.
+         Di gambar, logo ini menumpang di atas kartu. -->
+    
+    <!-- Kartu Login Utama -->
     <androidx.cardview.widget.CardView
         android:id="@+id/cardLogin"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_margin="24dp"
+        android:layout_marginHorizontal="32dp"
         app:cardCornerRadius="24dp"
-        app:cardElevation="12dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/btnRegister"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="#FFFFFF"
+        app:layout_constraintTop_toBottomOf="@id/blueBackground"
+        app:layout_constraintBottom_toBottomOf="@id/blueBackground"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.5"> 
+        <!-- bias 0.5 di bottomOf blueBackground berarti tengah kartu ada di garis batas biru-putih -->
+        <!-- Tapi di gambar, kartu lebih banyak di bagian putih. 
+             Kita atur top ke topOf parent dengan margin top yang besar, atau 
+             top ke bottomOf blueBackground dengan margin negatif. -->
+
+    </androidx.cardview.widget.CardView>
+    
+    <!-- Mari kita coba pendekatan constraint yang lebih presisi sesuai gambar -->
+    
+    <!-- Kartu Login -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/loginCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="60dp" 
+        app:cardCornerRadius="20dp"
+        app:cardElevation="10dp"
+        app:layout_constraintTop_toTopOf="@id/blueBackground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.25">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:paddingTop="60dp" 
+            android:paddingBottom="40dp"
+            android:paddingHorizontal="24dp">
+            <!-- PaddingTop 60dp untuk memberi ruang bagi logo yang menjorok ke dalam -->
 
-            <!-- Logo -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_gravity="center"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="8dp"
-                android:layout_marginBottom="16dp">
-
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="20dp"
-                    android:src="@drawable/logo_login"
-                    android:scaleType="centerInside"/>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Title -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Login"
-                android:textSize="24sp"
+                android:textColor="#0D47A1"
+                android:textSize="28sp"
                 android:textStyle="bold"
-                android:textColor="#0A2A66"
-                android:layout_gravity="center"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="24dp"/>
 
-            <!-- Email -->
+            <!-- Email Input -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:orientation="horizontal"
-                android:background="@drawable/edit_text"
-                android:gravity="center_vertical"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:layout_marginBottom="12dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/email_logo"
-                    android:tint="#0A2A66"/>
-
-                <EditText
-                    android:id="@+id/etEmail"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:hint="Email"
-                    android:inputType="textEmailAddress"
-                    android:background="@android:color/transparent"
-                    android:paddingStart="12dp"/>
-            </LinearLayout>
-
-            <!-- Password -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:orientation="horizontal"
-                android:background="@drawable/edit_text"
-                android:gravity="center_vertical"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
                 android:layout_marginBottom="16dp">
+                
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:background="@drawable/bg_edittext_outline"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp">
+                    
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/email_logo" 
+                        app:tint="#000000"/>
+                    
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="24dp"
+                        android:background="#CCCCCC"
+                        android:layout_marginHorizontal="8dp"/>
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/logo_password"
-                    android:tint="#0A2A66"/>
-
-                <EditText
-                    android:id="@+id/etPassword"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:hint="Password"
-                    android:inputType="textPassword"
-                    android:background="@android:color/transparent"
-                    android:paddingStart="12dp"/>
+                    <EditText
+                        android:id="@+id/etEmail"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@null"
+                        android:hint="Email"
+                        android:textSize="14sp"
+                        android:inputType="textEmailAddress"
+                        android:textColor="#000000"
+                        android:textColorHint="#999999"/>
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- Button Login -->
+            <!-- Password Input -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:background="@drawable/bg_edittext_outline"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/logo_password"
+                        app:tint="#000000"/>
+                    
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="24dp"
+                        android:background="#CCCCCC"
+                        android:layout_marginHorizontal="8dp"/>
+
+                    <EditText
+                        android:id="@+id/etPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@null"
+                        android:hint="Password"
+                        android:textSize="14sp"
+                        android:inputType="textPassword"
+                        android:textColor="#000000"
+                        android:textColorHint="#999999"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Forgot Password -->
+            <TextView
+                android:id="@+id/tvForgotPassword"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Forgot Password"
+                android:textColor="#0D47A1"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:layout_marginBottom="32dp"/>
+
+            <!-- Login Button -->
             <Button
                 android:id="@+id/btnLogin"
-                android:layout_width="121dp"
-                android:layout_height="42dp"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
                 android:text="LOGIN"
-                android:textAllCaps="true"
-                android:textStyle="bold"
+                android:backgroundTint="#0D2C6B"
                 android:textColor="#FFFFFF"
-                android:background="@drawable/bttn_login"
-                android:layout_gravity="center_horizontal"/>
+                android:textStyle="bold"
+                android:textSize="16sp"
+                app:cornerRadius="8dp"/>
+
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Register -->
-    <Button
+    <!-- Logo Container (Floating above Card) -->
+    <!-- Ini adalah kotak putih dengan sudut tumpul yang berisi logo -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="12dp"
+        app:layout_constraintStart_toStartOf="@id/loginCard"
+        app:layout_constraintEnd_toEndOf="@id/loginCard"
+        app:layout_constraintTop_toTopOf="@id/loginCard"
+        app:layout_constraintBottom_toTopOf="@id/loginCard"
+        android:layout_marginTop="0dp"> 
+        <!-- constraintTop ke TopOf loginCard dan Bottom ke TopOf loginCard menempatkannya di tengah garis atas -->
+        
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_mindnest_logo"
+            android:padding="16dp"/>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Register Button Area -->
+    <LinearLayout
         android:id="@+id/btnRegister"
-        android:layout_width="121dp"
-        android:layout_height="42dp"
-        android:layout_marginTop="30dp"
-        android:background="@drawable/register_button"
-        android:text="Register"
-        android:textAllCaps="false"
-        android:textColor="#FFFFFF"
-        android:textStyle="bold"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_register_pill"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_marginBottom="40dp"
+        android:clickable="true"
+        android:focusable="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cardLogin" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Register"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="16dp"/>
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_arrow_right_circle"
+            app:tint="#0D2C6B"/>
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

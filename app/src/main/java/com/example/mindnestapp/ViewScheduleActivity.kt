@@ -1,9 +1,10 @@
 package com.example.mindnestapp
 
-import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.view.View
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -16,21 +17,19 @@ import com.prolificinteractive.materialcalendarview.spans.DotSpan
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Data class disesuaikan dengan data di Firebase
 data class ScheduleItem(
     val title: String = "",
     val description: String = "",
     val date: String = "",
     val time: String = "",
-    val priority: String = ""
+    val priority: String = "" // Di AddTaskActivity, ini menyimpan 'Category' (ex: Work, Gym)
 )
 
+// Class untuk Decorator (memberi titik pada kalender)
 class EventDecorator(private val color: Int, dates: Collection<CalendarDay>) : DayViewDecorator {
     private val dates: HashSet<CalendarDay> = HashSet(dates)
-
-    override fun shouldDecorate(day: CalendarDay): Boolean {
-        return dates.contains(day)
-    }
-
+    override fun shouldDecorate(day: CalendarDay): Boolean = dates.contains(day)
     override fun decorate(view: DayViewFacade) {
         view.addSpan(DotSpan(7f, color))
     }
@@ -41,39 +40,40 @@ class ViewScheduleActivity : AppCompatActivity() {
     private lateinit var binding: ActivityViewScheduleBinding
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("schedules")
     private val allSchedules = mutableMapOf<String, MutableList<ScheduleItem>>()
+    private lateinit var footerHelper: FooterNavHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityViewScheduleBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        footerHelper = FooterNavHelper(this)
+
         setupCalendar()
         setupListeners()
         fetchSchedulesFromFirebase()
-        setupFooterNavigation()
+        footerHelper.setupFooterNavigation()
     }
 
     private fun setupCalendar() {
-        binding.tvMonthYear.text = SimpleDateFormat("MMMM yyyy", Locale("id", "ID"))
-            .format(binding.calendarView.currentDate.date)
+        binding.tvMonthYear.text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(binding.calendarView.currentDate.date)
         binding.calendarView.selectedDate = CalendarDay.today()
     }
 
     private fun setupListeners() {
         binding.calendarView.setOnMonthChangedListener { _, date ->
-            binding.tvMonthYear.text = SimpleDateFormat("MMMM yyyy", Locale("id", "ID"))
-                .format(date.date)
+            binding.tvMonthYear.text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(date.date)
         }
-
         binding.btnPrevMonth.setOnClickListener { binding.calendarView.goToPrevious() }
         binding.btnNextMonth.setOnClickListener { binding.calendarView.goToNext() }
-
         binding.calendarView.setOnDateChangedListener { _, date, selected ->
             if (selected) {
                 val selectedDateKey = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date.date)
-                // INI BAGIAN PENTING: Memanggil fungsi untuk menampilkan data sesuai tanggal
                 showSchedulesForDate(selectedDateKey)
             }
+        }
+        binding.btnViewAll.setOnClickListener {
+            Toast.makeText(this, "Menampilkan semua event bulan ini", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -84,7 +84,7 @@ class ViewScheduleActivity : AppCompatActivity() {
                 for (scheduleSnapshot in snapshot.children) {
                     val schedule = scheduleSnapshot.getValue(ScheduleItem::class.java)
                     schedule?.let {
-                        if (it.date.isNotBlank()) { // Pastikan data tanggal tidak kosong
+                        if (it.date.isNotBlank()) {
                             if (!allSchedules.containsKey(it.date)) {
                                 allSchedules[it.date] = mutableListOf()
                             }
@@ -93,7 +93,6 @@ class ViewScheduleActivity : AppCompatActivity() {
                     }
                 }
                 updateCalendarDecorators()
-                // Setelah data terambil, langsung update tampilan untuk tanggal yang sedang terpilih
                 val currentSelectedDate = binding.calendarView.selectedDate ?: CalendarDay.today()
                 val todayKey = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(currentSelectedDate.date)
                 showSchedulesForDate(todayKey)
@@ -106,69 +105,94 @@ class ViewScheduleActivity : AppCompatActivity() {
     }
 
     private fun updateCalendarDecorators() {
-        val eventDates = allSchedules.keys.mapNotNull { dateString ->
+        val redDates = mutableSetOf<CalendarDay>()
+        val orangeDates = mutableSetOf<CalendarDay>()
+        val blueDates = mutableSetOf<CalendarDay>()
+
+        allSchedules.values.flatten().forEach { schedule ->
             try {
-                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateString)?.let { CalendarDay.from(it) }
-            } catch (e: Exception) {
-                null
-            }
+                val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(schedule.date)
+                date?.let {
+                    val calendarDay = CalendarDay.from(it)
+                    val category = schedule.priority.toLowerCase(Locale.ROOT)
+                    when {
+                        category.contains("gym") || category.contains("sport") -> orangeDates.add(calendarDay)
+                        category.contains("doctor") || category.contains("medis") -> redDates.add(calendarDay)
+                        else -> blueDates.add(calendarDay)
+                    }
+                }
+            } catch (e: Exception) { }
         }
-        binding.calendarView.removeDecorators() // Hapus decorator lama
-        binding.calendarView.addDecorator(EventDecorator(Color.BLUE, eventDates)) // Tambahkan yang baru
+
+        binding.calendarView.removeDecorators()
+        if (redDates.isNotEmpty()) binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#FF3B30"), redDates))
+        if (orangeDates.isNotEmpty()) binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#FF9500"), orangeDates))
+        if (blueDates.isNotEmpty()) binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#007AFF"), blueDates))
     }
 
     private fun showSchedulesForDate(dateKey: String) {
-        // Gunakan binding secara konsisten dan benar
         binding.eventList.removeAllViews()
-        binding.tvSelectedDate.text = "Kegiatan pada $dateKey:"
 
-        // Mengambil data dari map HANYA untuk tanggal yang dipilih
+        try {
+            val parsedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateKey)
+            val formattedTitle = SimpleDateFormat("EEEE, d MMMM", Locale("en", "US")).format(parsedDate)
+            binding.tvSelectedDate.text = "Events on $formattedTitle"
+        } catch (e: Exception) {
+            binding.tvSelectedDate.text = "Events on $dateKey"
+        }
+
         val schedulesForDate = allSchedules[dateKey]
 
         if (schedulesForDate.isNullOrEmpty()) {
-            // Tampilkan pesan jika tidak ada jadwal
             val noEventView = layoutInflater.inflate(R.layout.item_no_schedule, binding.eventList, false)
             binding.eventList.addView(noEventView)
         } else {
-            // Loop dan tampilkan HANYA jadwal untuk tanggal yang dipilih
+            schedulesForDate.sortBy { it.time }
+
             schedulesForDate.forEach { schedule ->
                 val itemView = layoutInflater.inflate(R.layout.item_schedule, binding.eventList, false)
 
-                // Menghubungkan ke ID yang ada di 'item_schedule.xml'
+                val itemRoot = itemView.findViewById<LinearLayout>(R.id.itemRoot)
+                val priorityDot = itemView.findViewById<View>(R.id.priorityDot)
                 val tvTitle = itemView.findViewById<TextView>(R.id.tvTitle)
-                val tvDate = itemView.findViewById<TextView>(R.id.tvDate)
                 val tvTime = itemView.findViewById<TextView>(R.id.tvTime)
-                val tvPriority = itemView.findViewById<TextView>(R.id.tvPriority)
-                val tvCategory = itemView.findViewById<TextView>(R.id.tvCategory)
+                val ivCategoryIcon = itemView.findViewById<ImageView>(R.id.ivCategoryIcon)
 
-                // Mengisi data ke view
                 tvTitle.text = schedule.title
-                tvDate.text = schedule.date
                 tvTime.text = schedule.time
-                tvPriority.text = schedule.priority
-                tvCategory.text = schedule.description
+
+                val category = schedule.priority.toLowerCase(Locale.ROOT)
+
+                // Default Blue (Work/General)
+                var cardColor = Color.parseColor("#E3F2FD") // Light Blue
+                var dotDrawable = R.drawable.priority_dot_blue
+                var iconRes = R.drawable.ic_work
+
+                when {
+                    category.contains("gym") || category.contains("sport") || category.contains("olahraga") -> {
+                        cardColor = Color.parseColor("#FFF3E0") // Light Orange
+                        dotDrawable = R.drawable.priority_dot_orange
+                        iconRes = R.drawable.ic_gym
+                    }
+                    category.contains("doctor") || category.contains("medis") || category.contains("sakit") || category.contains("hospital") -> {
+                        cardColor = Color.parseColor("#FFEBEE") // Light Red
+                        dotDrawable = R.drawable.priority_dot_red
+                        iconRes = R.drawable.ic_doctor
+                    }
+                    else -> {
+                        // Default / Work
+                        cardColor = Color.parseColor("#E3F2FD")
+                        dotDrawable = R.drawable.priority_dot_blue
+                        iconRes = R.drawable.ic_work
+                    }
+                }
+
+                itemRoot.setBackgroundColor(cardColor)
+                priorityDot.setBackgroundResource(dotDrawable)
+                ivCategoryIcon.setImageResource(iconRes)
 
                 binding.eventList.addView(itemView)
             }
-        }
-    }
-
-    private fun setupFooterNavigation() {
-        binding.footerNav.navHome.setOnClickListener {
-            // Arahkan ke MainActivity jika ada, atau beri pesan
-            // startActivity(Intent(this, MainActivity::class.java))
-            Toast.makeText(this, "Fitur Home belum tersedia", Toast.LENGTH_SHORT).show()
-        }
-        binding.footerNav.navCalendar.setOnClickListener { /* Sudah di halaman ini */ }
-        binding.footerNav.navAdd.setOnClickListener {
-            startActivity(Intent(this, AddTaskActivity::class.java))
-        }
-        binding.footerNav.navFile.setOnClickListener {
-            Toast.makeText(this, "Fitur File belum tersedia", Toast.LENGTH_SHORT).show()
-        }
-        binding.footerNav.navSettings.setOnClickListener {
-            // Arahkan ke ProfileActivity
-            startActivity(Intent(this, ProfileActivity::class.java))
         }
     }
 }

@@ -1,75 +1,135 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
-    android:background="#FFFFFF"
-    android:padding="16dp"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:fitsSystemWindows="true"
+    tools:context=".ViewScheduleActivity">
 
-    <!-- Header bulan dan tahun -->
-    <LinearLayout
+    <!-- Konten Atas (Header dan Kalender) -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:padding="8dp">
+        android:background="#FFFFFF"
+        app:elevation="0dp">
 
-        <ImageView
-            android:id="@+id/btnPrevMonth"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_arrow_left"
-            android:contentDescription="Previous month"
-            android:padding="4dp" />
-
-        <TextView
-            android:id="@+id/tvMonthYear"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Oktober 2025"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginHorizontal="16dp"
-            android:textColor="#000000" />
+            android:orientation="vertical"
+            app:layout_scrollFlags="scroll|enterAlways">
 
-        <ImageView
-            android:id="@+id/btnNextMonth"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_arrow_right"
-            android:contentDescription="Next month"
-            android:padding="4dp" />
-    </LinearLayout>
+            <!-- Header Bulan dan Tahun -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
 
-    <!-- Kalender -->
-    <com.prolificinteractive.materialcalendarview.MaterialCalendarView
-        android:id="@+id/calendarView"
+                <TextView
+                    android:id="@+id/tvMonthYear"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="December 2024"
+                    android:textColor="#111827"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/btnPrevMonth"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_arrow_left"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:tint="#111827"/>
+
+                <ImageView
+                    android:id="@+id/btnNextMonth"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_arrow_right"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:tint="#111827"/>
+            </LinearLayout>
+
+            <!-- Kalender -->
+            <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+                android:id="@+id/calendarView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:mcv_selectionColor="#007AFF"
+                app:mcv_showOtherDates="all"
+                app:mcv_headerTextAppearance="@style/TextAppearance.AppCompat.Medium"
+                app:mcv_weekDayTextAppearance="@style/TextAppearance.AppCompat.Small"
+                app:mcv_dateTextAppearance="@style/TextAppearance.AppCompat.Small"
+                android:paddingBottom="8dp"/>
+        </LinearLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Konten Scroll -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:mcv_showOtherDates="all"
-        app:mcv_headerTextAppearance="@style/TextAppearance.MaterialComponents.Body1"
-        app:mcv_weekDayTextAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-    <!-- Daftar kegiatan -->
-    <TextView
-        android:id="@+id/tvSelectedDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Kegiatan pada 18 Oktober 2025:"
-        android:textStyle="bold"
-        android:textColor="#000000"
-        android:layout_marginBottom="8dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="100dp"> <!-- Padding bawah lebih besar untuk footer -->
 
-    <LinearLayout
-        android:id="@+id/eventList"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical" />
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
 
-    <!-- Footer (kalau sudah ada, bisa include di bawah ini) -->
+                <TextView
+                    android:id="@+id/tvSelectedDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Month event"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentStart="true"
+                    android:textColor="#111827"
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/btnViewAll"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="View All"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentEnd="true"
+                    android:textColor="#6200EE"
+                    android:textSize="14sp"/>
+            </RelativeLayout>
+
+            <!-- List Jadwal -->
+            <LinearLayout
+                android:id="@+id/eventList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Footer Navigation -->
     <include
         android:id="@+id/footerNav"
-        layout="@layout/layout_footer_nav" />
+        layout="@layout/layout_footer_nav"
+        android:layout_width="match_parent"
+        android:layout_height="70dp" 
+        android:layout_gravity="bottom"/>
 
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

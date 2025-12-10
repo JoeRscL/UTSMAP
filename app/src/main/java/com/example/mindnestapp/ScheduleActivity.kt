@@ -1,14 +1,18 @@
 package com.example.mindnestapp
 
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.mindnestapp.databinding.ActivityScheduleBinding
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -29,102 +33,180 @@ class ScheduleActivity : AppCompatActivity() {
     private lateinit var dateFormat: SimpleDateFormat
     private lateinit var tempCal: Calendar
     private var todayIndex: Int = 0
+    private lateinit var footerHelper: FooterNavHelper
+    private lateinit var auth: FirebaseAuth
+    private lateinit var database: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityScheduleBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Inisialisasi kalender
+        // Inisialisasi Firebase
+        auth = FirebaseAuth.getInstance()
+        database = FirebaseDatabase.getInstance().getReference("users")
+
+        // Inisialisasi Footer Helper
+        footerHelper = FooterNavHelper(this)
+
+        // Setup Header
+        setupHeader()
+
+        // --- KALENDER MINGGUAN REALTIME ---
+        setupWeeklyCalendar()
+
+        // --- LOAD JADWAL DARI FIREBASE ---
+        loadSchedules()
+
+        // Setup Footer Navigation menggunakan Helper
+        footerHelper.setupFooterNavigation()
+        
+        // Klik icon profil untuk ke settings
+        binding.ivProfileSmall.setOnClickListener { // ID diperbaiki kembali ke ivProfileSmall
+            startActivity(Intent(this, ProfileActivity::class.java))
+        }
+    }
+
+    private fun setupHeader() {
+        // 1. Set Tanggal Hari Ini
+        val headerFormat = SimpleDateFormat("EEEE d MMMM yyyy", Locale.getDefault())
+        binding.tvDate.text = headerFormat.format(Date())
+
+        // 2. Ambil Nama User dari Firebase
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            database.child(currentUser.uid).addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val name = snapshot.child("nama").getValue(String::class.java)
+                    val displayName = if (!name.isNullOrEmpty()) {
+                        name
+                    } else {
+                        val email = currentUser.email
+                        if (email != null) {
+                            email.substringBefore("@")
+                        } else {
+                            "User"
+                        }
+                    }
+                    binding.tvUserName.text = "Hi, $displayName"
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    binding.tvUserName.text = "Hi, User"
+                }
+            })
+        } else {
+            binding.tvUserName.text = "Hi, Guest"
+        }
+    }
+
+    private fun setupWeeklyCalendar() {
         dayCircles = mutableListOf()
-        days = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
-        dateFormat = SimpleDateFormat("dd", Locale.getDefault())
+        val dayInitials = listOf("S", "M", "T", "W", "T", "F", "S")
+        
+        val dateOnlyFormat = SimpleDateFormat("d", Locale.getDefault())
+        val monthFormat = SimpleDateFormat("MMM", Locale.getDefault())
+
         tempCal = Calendar.getInstance()
-        todayIndex = tempCal.get(Calendar.DAY_OF_WEEK) - 1
+        tempCal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
 
-        val dayTexts = mutableListOf<Pair<TextView, TextView>>()
+        val currentCal = Calendar.getInstance()
+        todayIndex = currentCal.get(Calendar.DAY_OF_WEEK) - 1 
 
-        for (i in days.indices) {
+        for (i in 0..6) {
             val dayWrapper = LinearLayout(this)
             val wrapperParams = LinearLayout.LayoutParams(
+                0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                1f
             )
-            wrapperParams.setMargins(12, 0, 12, 0)
             dayWrapper.layoutParams = wrapperParams
             dayWrapper.gravity = Gravity.CENTER
+            dayWrapper.orientation = LinearLayout.VERTICAL
 
             val circle = LinearLayout(this)
-            val circleParams = LinearLayout.LayoutParams(70.dp, 70.dp)
+            val circleParams = LinearLayout.LayoutParams(50.dp, 80.dp)
             circle.layoutParams = circleParams
             circle.orientation = LinearLayout.VERTICAL
             circle.gravity = Gravity.CENTER
+            
+            val isToday = (i == todayIndex)
+
             circle.setBackgroundResource(
-                if (i == todayIndex) R.drawable.bg_day_selected else R.drawable.bg_day_unselected
+                if (isToday) R.drawable.bg_day_pill_selected else R.drawable.bg_day_pill_unselected
             )
 
             val tvDay = TextView(this)
-            tvDay.text = days[i]
-            tvDay.textSize = 18f
+            tvDay.text = dayInitials[i]
+            tvDay.textSize = 14f
             tvDay.setTypeface(null, Typeface.BOLD)
             tvDay.gravity = Gravity.CENTER
             tvDay.setTextColor(
-                if (i == todayIndex)
-                    getColor(R.color.blue_700)
-                else
-                    getColor(R.color.gray_600)
+                if (isToday) Color.WHITE else Color.parseColor("#8E8E93")
             )
 
+            val dateStr = "${dateOnlyFormat.format(tempCal.time)}\n${monthFormat.format(tempCal.time)}"
             val tvDate = TextView(this)
-            tvDate.text = dateFormat.format(tempCal.time)
-            tvDate.textSize = 12f
+            tvDate.text = dateStr
+            tvDate.textSize = 10f
             tvDate.gravity = Gravity.CENTER
             tvDate.setTextColor(
-                if (i == todayIndex)
-                    getColor(R.color.blue_700)
-                else
-                    getColor(R.color.gray_600)
+                if (isToday) Color.WHITE else Color.parseColor("#8E8E93")
             )
+            tvDate.setLines(2)
 
             circle.addView(tvDay)
             circle.addView(tvDate)
+
             dayWrapper.addView(circle)
             binding.dayContainer.addView(dayWrapper)
 
             dayCircles.add(circle)
-            dayTexts.add(tvDay to tvDate)
-
-            circle.setOnClickListener {
-                for (j in dayCircles.indices) {
-                    dayCircles[j].setBackgroundResource(R.drawable.bg_day_unselected)
-                    dayTexts[j].first.setTextColor(getColor(R.color.gray_600))
-                    dayTexts[j].second.setTextColor(getColor(R.color.gray_600))
-                }
-                circle.setBackgroundResource(R.drawable.bg_day_selected)
-                tvDay.setTextColor(getColor(R.color.blue_700))
-                tvDate.setTextColor(getColor(R.color.blue_700))
-            }
 
             tempCal.add(Calendar.DAY_OF_MONTH, 1)
         }
+    }
 
-        // Firebase Realtime Database
-        val database = FirebaseDatabase.getInstance()
-        val scheduleRef = database.getReference("schedules")
+    private fun loadSchedules() {
+        val scheduleRef = FirebaseDatabase.getInstance().getReference("schedules")
 
         scheduleRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                binding.scheduleContainer.removeAllViews() // hapus jadwal lama
+                binding.scheduleContainer.removeAllViews()
                 if (snapshot.exists()) {
                     for (child in snapshot.children) {
                         val schedule = child.getValue(Schedule::class.java)
                         schedule?.let {
-                            val view = layoutInflater.inflate(R.layout.item_schedule, binding.scheduleContainer, false)
-                            view.findViewById<TextView>(R.id.tvTitle).text = it.title
-                            view.findViewById<TextView>(R.id.tvDate).text = it.date
-                            view.findViewById<TextView>(R.id.tvTime).text = it.time
-                            view.findViewById<TextView>(R.id.tvPriority).text = it.priority
-                            view.findViewById<TextView>(R.id.tvCategory).text = it.description
+                            val view = layoutInflater.inflate(R.layout.item_schedule_home, binding.scheduleContainer, false)
+                            
+                            val tvTitle = view.findViewById<TextView>(R.id.tvTitle)
+                            val tvPriority = view.findViewById<TextView>(R.id.tvPriority)
+                            val tvDate = view.findViewById<TextView>(R.id.tvDate)
+                            val tvCategory = view.findViewById<TextView>(R.id.tvCategory)
+                            val tvTime = view.findViewById<TextView>(R.id.tvTime)
+
+                            tvTitle.text = it.title
+                            
+                            try {
+                                val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                val outputFormat = SimpleDateFormat("EEEE d MMM yyyy", Locale.getDefault())
+                                val dateObj = inputFormat.parse(it.date)
+                                if (dateObj != null) {
+                                    tvDate.text = outputFormat.format(dateObj).uppercase()
+                                }
+                            } catch (e: Exception) {
+                                tvDate.text = it.date
+                            }
+
+                            tvTime.text = it.time
+                            tvCategory.text = it.priority
+
+                            if (it.title.contains("Penting", true) || it.title.contains("Urgent", true)) {
+                                tvPriority.text = "HIGH"
+                            } else {
+                                tvPriority.text = "MEDIUM"
+                            }
+
                             binding.scheduleContainer.addView(view)
                         }
                     }
@@ -137,32 +219,8 @@ class ScheduleActivity : AppCompatActivity() {
                 Toast.makeText(this@ScheduleActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
             }
         })
-
-        // Footer Navigation
-        binding.footerNav.navHome.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
-        }
-
-        binding.footerNav.navCalendar.setOnClickListener {
-            Toast.makeText(this, "You are already on Schedule page", Toast.LENGTH_SHORT).show()
-        }
-
-        binding.footerNav.navAdd.setOnClickListener {
-            startActivity(Intent(this, AddTaskActivity::class.java))
-        }
-
-        binding.footerNav.navFile.setOnClickListener {
-            Toast.makeText(this, "Open Activity Files", Toast.LENGTH_SHORT).show()
-        }
-
-        binding.footerNav.navSettings.setOnClickListener {
-            startActivity(Intent(this, ProfileActivity::class.java))
-            finish()
-        }
     }
 
-    // fungsi konversi dp ke px
     val Int.dp: Int
         get() = (this * resources.displayMetrics.density).toInt()
 }

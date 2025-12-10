@@ -25,12 +25,12 @@ class register : AppCompatActivity() {
         // Tombol Daftar
         binding.btnDaftar.setOnClickListener {
             val email = binding.etEmail.text.toString().trim()
-            val nama = binding.etNama.text.toString().trim()
+            // etNama dihapus karena tidak ada di desain UI baru
             val password = binding.etPassword.text.toString().trim()
             val confirmPassword = binding.etConfirmPassword.text.toString().trim()
 
             // Validasi input
-            if (email.isEmpty() || nama.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+            if (email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
                 Toast.makeText(this, "Silakan isi semua field", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -55,9 +55,9 @@ class register : AppCompatActivity() {
                             // Simpan data user ke Realtime Database
                             val userProfile = hashMapOf(
                                 "userId" to userId,
-                                "nama" to nama,
                                 "email" to email,
                                 "createdAt" to System.currentTimeMillis()
+                                // Nama bisa diisi user nanti di halaman Profile
                             )
 
                             database.reference.child("users").child(userId)

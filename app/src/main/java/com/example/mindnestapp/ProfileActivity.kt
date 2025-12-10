@@ -1,12 +1,14 @@
 package com.example.mindnestapp
 
 import android.app.Activity
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -27,26 +29,25 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var binding: ActivityProfileBinding
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
-    private var imageUri: Uri? = null // Untuk menyimpan URI gambar yang akan diupload
+    private var imageUri: Uri? = null
+    private val genderOptions = arrayOf("Select your gender", "Male", "Female", "Other")
 
-    // Launcher untuk memilih gambar dari galeri
+    // Launcher untuk galeri
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let {
                 imageUri = it
-                binding.ivProfile.setImageURI(it) // Tampilkan preview
+                binding.ivProfile.setImageURI(it)
                 uploadImageToFirebase()
             }
         }
     }
 
-    // Launcher untuk mengambil gambar dari kamera
+    // Launcher untuk kamera
     private val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            // Gambar dari kamera sudah disimpan di `imageUri` yang kita buat sebelumnya.
-            // Langsung tampilkan preview dan mulai proses upload.
             imageUri?.let {
-                binding.ivProfile.setImageURI(it) // Tampilkan preview
+                binding.ivProfile.setImageURI(it)
                 uploadImageToFirebase()
             }
         }
@@ -61,58 +62,102 @@ class ProfileActivity : AppCompatActivity() {
         val currentUser = auth.currentUser
 
         if (currentUser == null) {
-            // Jika tidak ada user yang login, kembali ke halaman login
             startActivity(Intent(this, login::class.java))
             finish()
             return
         }
 
-        // Referensi ke data user spesifik di Firebase
         database = FirebaseDatabase.getInstance().getReference("users").child(currentUser.uid)
 
+        // Setup UI dan listeners
+        setupSpinner()
         loadUserProfile()
         setupClickListeners()
+    }
+
+    private fun setupSpinner() {
+        val genderAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, genderOptions)
+        genderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerGender.adapter = genderAdapter
     }
 
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener { finish() }
 
-        binding.btnLogout.setOnClickListener {
-            auth.signOut()
-            val intent = Intent(this, login::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+        // Tombol logout sudah tidak ada, diganti tombol Update Profile
+        binding.btnUpdateProfile.setOnClickListener { 
+            updateUserProfileData()
         }
 
         binding.ivProfile.setOnClickListener { showImagePickerDialog() }
+        
+        // Listener untuk tanggal lahir
+        binding.layoutDateOfBirth.setOnClickListener {
+            showDatePickerDialog()
+        }
+    }
+
+    private fun showDatePickerDialog() {
+        val calendar = Calendar.getInstance()
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+        val datePickerDialog = DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
+            val selectedDate = String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay)
+            binding.tvDateOfBirth.text = selectedDate
+        }, year, month, day)
+
+        datePickerDialog.show()
     }
 
     private fun loadUserProfile() {
         binding.progressBar.visibility = View.VISIBLE
-        // Menggunakan addValueEventListener agar jika ada perubahan data (seperti URL foto),
-        // tampilan langsung diperbarui.
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
-                    // Ambil data dari Firebase
-                    val name = snapshot.child("nama").getValue(String::class.java)
+                    val firstName = snapshot.child("firstName").getValue(String::class.java)
+                    val lastName = snapshot.child("lastName").getValue(String::class.java)
                     val email = snapshot.child("email").getValue(String::class.java)
                     val profileImageUrl = snapshot.child("profileImageUrl").getValue(String::class.java)
+                    
+                    // --- Ambil data dari Firebase ---
+                    val fullPhoneNumber = snapshot.child("phoneNumber").getValue(String::class.java)
+                    val gender = snapshot.child("gender").getValue(String::class.java)
+                    val dateOfBirth = snapshot.child("dateOfBirth").getValue(String::class.java)
 
-                    // Tampilkan data ke UI
-                    binding.tvProfileName.text = name ?: "Nama tidak ditemukan"
+                    // Set Nama, Email, Foto Profil
+                    binding.tvProfileName.text = "$firstName $lastName"
                     binding.tvProfileEmail.text = email ?: "Email tidak ditemukan"
-
-                    // Muat gambar profil menggunakan Glide
-                    // Glide akan menangani caching (penyimpanan sementara di local storage) secara otomatis
+                    binding.etFirstName.setText(firstName)
+                    binding.etLastName.setText(lastName)
+                    
                     if (!profileImageUrl.isNullOrEmpty()) {
                         Glide.with(this@ProfileActivity)
                             .load(profileImageUrl)
-                            .placeholder(R.drawable.ic_default_profile) // Tampilkan ini saat gambar sedang dimuat
+                            .placeholder(R.drawable.ic_default_profile)
                             .into(binding.ivProfile)
                     }
-                } else {
-                    Toast.makeText(this@ProfileActivity, "Data profil tidak ditemukan.", Toast.LENGTH_SHORT).show()
+
+                    // --- Set Country Code Picker & Nomor Telepon ---
+                    if (!fullPhoneNumber.isNullOrEmpty()) {
+                        // library CCP secara otomatis akan memisahkan kode negara dan nomor
+                        binding.ccp.fullNumber = fullPhoneNumber
+                        binding.etPhoneNumber.setText(fullPhoneNumber.replace(binding.ccp.selectedCountryCodeWithPlus, ""))
+                    }
+
+                    // --- Set Spinner Gender ---
+                    if (!gender.isNullOrEmpty()) {
+                        val genderPosition = genderOptions.indexOf(gender)
+                        if (genderPosition >= 0) {
+                            binding.spinnerGender.setSelection(genderPosition)
+                        }
+                    }
+
+                    // --- Set Tanggal Lahir ---
+                    if (!dateOfBirth.isNullOrEmpty()) {
+                        binding.tvDateOfBirth.text = dateOfBirth
+                    }
                 }
                 binding.progressBar.visibility = View.GONE
             }
@@ -124,13 +169,51 @@ class ProfileActivity : AppCompatActivity() {
         })
     }
 
+    private fun updateUserProfileData(){
+        val firstName = binding.etFirstName.text.toString().trim()
+        val lastName = binding.etLastName.text.toString().trim()
+        
+        // --- Ambil data dari komponen baru ---
+        binding.ccp.registerCarrierNumberEditText(binding.etPhoneNumber)
+        val phoneNumber = binding.ccp.fullNumberWithPlus.trim() // -> +6281...
+        val gender = if (binding.spinnerGender.selectedItemPosition > 0) {
+            binding.spinnerGender.selectedItem.toString()
+        } else {
+            "" // Jangan simpan jika "Select your gender" yang dipilih
+        }
+        val dateOfBirth = binding.tvDateOfBirth.text.toString()
+
+        if (firstName.isEmpty() || lastName.isEmpty()) {
+            Toast.makeText(this, "Nama depan dan belakang tidak boleh kosong", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val userUpdates = mapOf(
+            "firstName" to firstName,
+            "lastName" to lastName,
+            "phoneNumber" to phoneNumber,
+            "gender" to gender,
+            "dateOfBirth" to dateOfBirth
+        )
+
+        binding.progressBar.visibility = View.VISIBLE
+        database.updateChildren(userUpdates).addOnCompleteListener {
+            binding.progressBar.visibility = View.GONE
+            if(it.isSuccessful){
+                Toast.makeText(this, "Profil berhasil diperbarui", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Gagal memperbarui profil: ${it.exception?.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private fun showImagePickerDialog() {
         val options = arrayOf("Buka Kamera", "Pilih dari Galeri")
         AlertDialog.Builder(this)
             .setTitle("Ganti Foto Profil")
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> openCamera() // Panggil fungsi kamera
+                    0 -> openCamera()
                     1 -> openGallery()
                 }
             }
@@ -142,9 +225,6 @@ class ProfileActivity : AppCompatActivity() {
         galleryLauncher.launch(intent)
     }
 
-    // ============================================
-    //  FUNGSI UNTUK MEMBUKA KAMERA (SUDAH BENAR)
-    // ============================================
     private fun openCamera() {
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         createImageUri()?.let { uri ->
@@ -158,42 +238,26 @@ class ProfileActivity : AppCompatActivity() {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         return try {
-            val file = File.createTempFile(
-                "JPEG_${timeStamp}_",
-                ".jpg",
-                storageDir
-            )
-            // Dapatkan URI yang aman melalui FileProvider
-            FileProvider.getUriForFile(
-                this,
-                "${applicationContext.packageName}.provider", // Otoritas harus cocok dengan di Manifest
-                file
-            )
+            val file = File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
+            FileProvider.getUriForFile(this, "${applicationContext.packageName}.provider", file)
         } catch (e: IOException) {
             Toast.makeText(this, "Gagal membuat file gambar", Toast.LENGTH_SHORT).show()
             null
         }
     }
 
-    // =============================================================
-    //  FUNGSI UNTUK UPLOAD KE STORAGE & UPDATE KE REALTIME DATABASE
-    // =============================================================
     private fun uploadImageToFirebase() {
         imageUri?.let { uri ->
-            binding.progressBar.visibility = View.VISIBLE // Tampilkan loading
-            // Buat path unik untuk setiap pengguna di Firebase Storage
+            binding.progressBar.visibility = View.VISIBLE
             val storageRef = FirebaseStorage.getInstance().getReference("profile_images/${auth.currentUser?.uid}")
 
-            // 1. Upload file ke Firebase Storage
             storageRef.putFile(uri)
-                .addOnSuccessListener {
-                    // 2. Jika upload berhasil, dapatkan URL download-nya
+                .addOnSuccessListener { 
                     storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                        // 3. Panggil fungsi untuk menyimpan URL ini ke Realtime Database
                         updateProfileImageUrl(downloadUrl.toString())
                     }
                 }
-                .addOnFailureListener {
+                .addOnFailureListener { 
                     binding.progressBar.visibility = View.GONE
                     Toast.makeText(this, "Upload gagal: ${it.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -201,7 +265,6 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun updateProfileImageUrl(url: String) {
-        // 4. Simpan URL ke dalam node 'profileImageUrl' di Realtime Database
         database.child("profileImageUrl").setValue(url)
             .addOnSuccessListener {
                 binding.progressBar.visibility = View.GONE
