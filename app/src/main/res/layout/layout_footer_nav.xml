@@ -58,19 +58,6 @@
             android:tint="#FFFFFF" />
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/navFile"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center">
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_file"
-            android:tint="#FFFFFF"/>
-    </LinearLayout>
 
     <!-- SETTINGS -->
     <LinearLayout

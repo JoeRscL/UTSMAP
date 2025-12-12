@@ -15,6 +15,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.mindnestapp.databinding.ActivityProfileBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
@@ -31,6 +32,7 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var database: DatabaseReference
     private var imageUri: Uri? = null
     private val genderOptions = arrayOf("Select your gender", "Male", "Female", "Other")
+    private lateinit var userProfileListener: ValueEventListener
 
     // Launcher untuk galeri
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -62,17 +64,23 @@ class ProfileActivity : AppCompatActivity() {
         val currentUser = auth.currentUser
 
         if (currentUser == null) {
-            startActivity(Intent(this, login::class.java))
             finish()
             return
         }
 
         database = FirebaseDatabase.getInstance().getReference("users").child(currentUser.uid)
 
-        // Setup UI dan listeners
         setupSpinner()
         loadUserProfile()
         setupClickListeners()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Hindari memory leak dengan melepaskan listener saat activity dihancurkan
+        if (this::userProfileListener.isInitialized) {
+            database.removeEventListener(userProfileListener)
+        }
     }
 
     private fun setupSpinner() {
@@ -84,17 +92,18 @@ class ProfileActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener { finish() }
 
-        // Tombol logout sudah tidak ada, diganti tombol Update Profile
-        binding.btnUpdateProfile.setOnClickListener { 
+        binding.btnUpdateProfile.setOnClickListener {
             updateUserProfileData()
         }
 
         binding.ivProfile.setOnClickListener { showImagePickerDialog() }
-        
-        // Listener untuk tanggal lahir
+
         binding.layoutDateOfBirth.setOnClickListener {
             showDatePickerDialog()
         }
+
+        // Daftarkan EditText nomor telepon ke CCP di sini agar tidak berulang kali
+        binding.ccp.registerCarrierNumberEditText(binding.etPhoneNumber)
     }
 
     private fun showDatePickerDialog() {
@@ -113,40 +122,39 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun loadUserProfile() {
         binding.progressBar.visibility = View.VISIBLE
-        database.addValueEventListener(object : ValueEventListener {
+        userProfileListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                if (isDestroyed || isFinishing) return
+
                 if (snapshot.exists()) {
                     val firstName = snapshot.child("firstName").getValue(String::class.java)
                     val lastName = snapshot.child("lastName").getValue(String::class.java)
                     val email = snapshot.child("email").getValue(String::class.java)
                     val profileImageUrl = snapshot.child("profileImageUrl").getValue(String::class.java)
-                    
-                    // --- Ambil data dari Firebase ---
                     val fullPhoneNumber = snapshot.child("phoneNumber").getValue(String::class.java)
                     val gender = snapshot.child("gender").getValue(String::class.java)
                     val dateOfBirth = snapshot.child("dateOfBirth").getValue(String::class.java)
 
-                    // Set Nama, Email, Foto Profil
                     binding.tvProfileName.text = "$firstName $lastName"
                     binding.tvProfileEmail.text = email ?: "Email tidak ditemukan"
                     binding.etFirstName.setText(firstName)
                     binding.etLastName.setText(lastName)
-                    
+
                     if (!profileImageUrl.isNullOrEmpty()) {
+                        // PERBAIKAN: Nonaktifkan cache Glide agar gambar profil terbaru selalu dimuat
                         Glide.with(this@ProfileActivity)
                             .load(profileImageUrl)
                             .placeholder(R.drawable.ic_default_profile)
+                            .diskCacheStrategy(DiskCacheStrategy.NONE)
+                            .skipMemoryCache(true)
                             .into(binding.ivProfile)
                     }
 
-                    // --- Set Country Code Picker & Nomor Telepon ---
                     if (!fullPhoneNumber.isNullOrEmpty()) {
-                        // library CCP secara otomatis akan memisahkan kode negara dan nomor
                         binding.ccp.fullNumber = fullPhoneNumber
                         binding.etPhoneNumber.setText(fullPhoneNumber.replace(binding.ccp.selectedCountryCodeWithPlus, ""))
                     }
 
-                    // --- Set Spinner Gender ---
                     if (!gender.isNullOrEmpty()) {
                         val genderPosition = genderOptions.indexOf(gender)
                         if (genderPosition >= 0) {
@@ -154,7 +162,6 @@ class ProfileActivity : AppCompatActivity() {
                         }
                     }
 
-                    // --- Set Tanggal Lahir ---
                     if (!dateOfBirth.isNullOrEmpty()) {
                         binding.tvDateOfBirth.text = dateOfBirth
                     }
@@ -163,23 +170,24 @@ class ProfileActivity : AppCompatActivity() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                binding.progressBar.visibility = View.GONE
-                Toast.makeText(this@ProfileActivity, "Gagal memuat profil: ${error.message}", Toast.LENGTH_SHORT).show()
+                if (!isDestroyed && !isFinishing) {
+                    binding.progressBar.visibility = View.GONE
+                    Toast.makeText(this@ProfileActivity, "Gagal memuat profil: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
             }
-        })
+        }
+        database.addValueEventListener(userProfileListener)
     }
 
-    private fun updateUserProfileData(){
+    private fun updateUserProfileData() {
         val firstName = binding.etFirstName.text.toString().trim()
         val lastName = binding.etLastName.text.toString().trim()
-        
-        // --- Ambil data dari komponen baru ---
-        binding.ccp.registerCarrierNumberEditText(binding.etPhoneNumber)
-        val phoneNumber = binding.ccp.fullNumberWithPlus.trim() // -> +6281...
+
+        val phoneNumber = binding.ccp.fullNumberWithPlus.trim()
         val gender = if (binding.spinnerGender.selectedItemPosition > 0) {
             binding.spinnerGender.selectedItem.toString()
         } else {
-            "" // Jangan simpan jika "Select your gender" yang dipilih
+            ""
         }
         val dateOfBirth = binding.tvDateOfBirth.text.toString()
 
@@ -199,7 +207,7 @@ class ProfileActivity : AppCompatActivity() {
         binding.progressBar.visibility = View.VISIBLE
         database.updateChildren(userUpdates).addOnCompleteListener {
             binding.progressBar.visibility = View.GONE
-            if(it.isSuccessful){
+            if (it.isSuccessful) {
                 Toast.makeText(this, "Profil berhasil diperbarui", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(this, "Gagal memperbarui profil: ${it.exception?.message}", Toast.LENGTH_SHORT).show()
@@ -249,17 +257,31 @@ class ProfileActivity : AppCompatActivity() {
     private fun uploadImageToFirebase() {
         imageUri?.let { uri ->
             binding.progressBar.visibility = View.VISIBLE
-            val storageRef = FirebaseStorage.getInstance().getReference("profile_images/${auth.currentUser?.uid}")
-
+    
+            val userId = auth.currentUser?.uid
+            if (userId == null) {
+                binding.progressBar.visibility = View.GONE
+                Toast.makeText(this, "Sesi pengguna tidak valid, silakan login ulang.", Toast.LENGTH_SHORT).show()
+                return
+            }
+    
+            val storageRef = FirebaseStorage.getInstance().getReference("profile_images/$userId.jpg")
+    
             storageRef.putFile(uri)
-                .addOnSuccessListener { 
+                .addOnSuccessListener {
+                    // Setelah upload berhasil, dapatkan URL download
                     storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
                         updateProfileImageUrl(downloadUrl.toString())
+                    }.addOnFailureListener {
+                        // Gagal mendapatkan URL, bisa jadi karena aturan read
+                        binding.progressBar.visibility = View.GONE
+                        Toast.makeText(this, "Upload berhasil, tapi gagal mendapatkan URL gambar.", Toast.LENGTH_SHORT).show()
                     }
                 }
-                .addOnFailureListener { 
+                .addOnFailureListener { exception ->
                     binding.progressBar.visibility = View.GONE
-                    Toast.makeText(this, "Upload gagal: ${it.message}", Toast.LENGTH_SHORT).show()
+                    // Pesan error yang lebih deskriptif untuk membantu debugging
+                    Toast.makeText(this, "Upload gagal. Periksa aturan keamanan Firebase Storage Anda. Error: ${exception.message}", Toast.LENGTH_LONG).show()
                 }
         }
     }
@@ -272,7 +294,7 @@ class ProfileActivity : AppCompatActivity() {
             }
             .addOnFailureListener {
                 binding.progressBar.visibility = View.GONE
-                Toast.makeText(this, "Gagal memperbarui URL foto di database.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal memperbarui URL database.", Toast.LENGTH_SHORT).show()
             }
     }
 }

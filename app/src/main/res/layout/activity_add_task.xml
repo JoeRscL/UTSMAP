@@ -90,7 +90,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
-                    android:hint="Work"
+                    android:hint="Category"
                     android:textColorHint="#8E8E93"
                     android:textSize="16sp" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -254,7 +254,7 @@
         android:id="@+id/footerNav"
         layout="@layout/layout_footer_nav"
         android:layout_width="match_parent"
-        android:layout_height="70dp" 
+        android:layout_height="70dp"
         android:layout_alignParentBottom="true" />
 
 </RelativeLayout>

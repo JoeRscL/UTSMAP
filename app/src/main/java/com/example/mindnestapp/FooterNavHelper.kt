@@ -11,7 +11,7 @@ class FooterNavHelper(private val activity: Activity) {
         val navHome = activity.findViewById<LinearLayout>(R.id.navHome)
         val navCalendar = activity.findViewById<LinearLayout>(R.id.navCalendar)
         val navAdd = activity.findViewById<LinearLayout>(R.id.navAdd)
-        val navFile = activity.findViewById<LinearLayout>(R.id.navFile)
+
         val navSettings = activity.findViewById<LinearLayout>(R.id.navSettings)
 
         // ========================================================
@@ -47,9 +47,7 @@ class FooterNavHelper(private val activity: Activity) {
         }
 
         // 4. Tombol File -> Tetap menampilkan Toast
-        navFile.setOnClickListener {
-            Toast.makeText(activity, "Fitur File belum tersedia", Toast.LENGTH_SHORT).show()
-        }
+
 
         // 5. Tombol Settings -> Mengarah ke ProfileActivity
         navSettings.setOnClickListener {
