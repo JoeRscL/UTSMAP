@@ -1,6 +1,7 @@
 package com.example.mindnestapp
 
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
@@ -8,6 +9,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.example.mindnestapp.databinding.ActivityViewScheduleBinding
 import com.google.firebase.database.*
 import com.prolificinteractive.materialcalendarview.CalendarDay
@@ -23,7 +25,8 @@ data class ScheduleItem(
     val description: String = "",
     val date: String = "",
     val time: String = "",
-    val priority: String = "" // Di AddTaskActivity, ini menyimpan 'Category' (ex: Work, Gym)
+    val priority: String = "", // High, Medium, Low
+    val category: String = "" // Work, Gym, Doctor, etc.
 )
 
 // Class untuk Decorator (memberi titik pada kalender)
@@ -106,7 +109,8 @@ class ViewScheduleActivity : AppCompatActivity() {
 
     private fun updateCalendarDecorators() {
         val redDates = mutableSetOf<CalendarDay>()
-        val orangeDates = mutableSetOf<CalendarDay>()
+        val yellowDates = mutableSetOf<CalendarDay>()
+        val greenDates = mutableSetOf<CalendarDay>()
         val blueDates = mutableSetOf<CalendarDay>()
 
         allSchedules.values.flatten().forEach { schedule ->
@@ -114,10 +118,11 @@ class ViewScheduleActivity : AppCompatActivity() {
                 val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(schedule.date)
                 date?.let {
                     val calendarDay = CalendarDay.from(it)
-                    val category = schedule.priority.toLowerCase(Locale.ROOT)
+                    val priority = schedule.priority.toLowerCase(Locale.ROOT)
                     when {
-                        category.contains("gym") || category.contains("sport") -> orangeDates.add(calendarDay)
-                        category.contains("doctor") || category.contains("medis") -> redDates.add(calendarDay)
+                        priority == "high" || priority == "tinggi" -> redDates.add(calendarDay)
+                        priority == "medium" || priority == "sedang" -> yellowDates.add(calendarDay)
+                        priority == "low" || priority == "rendah" -> greenDates.add(calendarDay)
                         else -> blueDates.add(calendarDay)
                     }
                 }
@@ -126,7 +131,8 @@ class ViewScheduleActivity : AppCompatActivity() {
 
         binding.calendarView.removeDecorators()
         if (redDates.isNotEmpty()) binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#FF3B30"), redDates))
-        if (orangeDates.isNotEmpty()) binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#FF9500"), orangeDates))
+        if (yellowDates.isNotEmpty()) binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#FFCC00"), yellowDates))
+        if (greenDates.isNotEmpty()) binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#34C759"), greenDates))
         if (blueDates.isNotEmpty()) binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#007AFF"), blueDates))
     }
 
@@ -153,7 +159,7 @@ class ViewScheduleActivity : AppCompatActivity() {
                 val itemView = layoutInflater.inflate(R.layout.item_schedule, binding.eventList, false)
 
                 val itemRoot = itemView.findViewById<LinearLayout>(R.id.itemRoot)
-                val priorityDot = itemView.findViewById<View>(R.id.priorityDot)
+                val priorityDot = itemView.findViewById<ImageView>(R.id.priorityDot)
                 val tvTitle = itemView.findViewById<TextView>(R.id.tvTitle)
                 val tvTime = itemView.findViewById<TextView>(R.id.tvTime)
                 val ivCategoryIcon = itemView.findViewById<ImageView>(R.id.ivCategoryIcon)
@@ -161,34 +167,40 @@ class ViewScheduleActivity : AppCompatActivity() {
                 tvTitle.text = schedule.title
                 tvTime.text = schedule.time
 
-                val category = schedule.priority.toLowerCase(Locale.ROOT)
-
-                // Default Blue (Work/General)
-                var cardColor = Color.parseColor("#E3F2FD") // Light Blue
-                var dotDrawable = R.drawable.priority_dot_blue
-                var iconRes = R.drawable.ic_work
+                // Set Priority Colors and Background
+                val priority = schedule.priority.toLowerCase(Locale.ROOT)
+                val bgDrawable = ContextCompat.getDrawable(this, R.drawable.bg_card)?.mutate() as? GradientDrawable
 
                 when {
-                    category.contains("gym") || category.contains("sport") || category.contains("olahraga") -> {
-                        cardColor = Color.parseColor("#FFF3E0") // Light Orange
-                        dotDrawable = R.drawable.priority_dot_orange
-                        iconRes = R.drawable.ic_gym
+                    priority == "high" || priority == "tinggi" -> {
+                        priorityDot.setImageResource(R.drawable.priority_dot_red)
+                        bgDrawable?.setColor(ContextCompat.getColor(this, R.color.priority_high_bg))
                     }
-                    category.contains("doctor") || category.contains("medis") || category.contains("sakit") || category.contains("hospital") -> {
-                        cardColor = Color.parseColor("#FFEBEE") // Light Red
-                        dotDrawable = R.drawable.priority_dot_red
-                        iconRes = R.drawable.ic_doctor
+                    priority == "medium" || priority == "sedang" -> {
+                        priorityDot.setImageResource(R.drawable.priority_dot_yellow)
+                        bgDrawable?.setColor(ContextCompat.getColor(this, R.color.priority_medium_bg))
+                    }
+                    priority == "low" || priority == "rendah" -> {
+                        priorityDot.setImageResource(R.drawable.priority_dot_green)
+                        bgDrawable?.setColor(ContextCompat.getColor(this, R.color.priority_low_bg))
                     }
                     else -> {
-                        // Default / Work
-                        cardColor = Color.parseColor("#E3F2FD")
-                        dotDrawable = R.drawable.priority_dot_blue
-                        iconRes = R.drawable.ic_work
+                        priorityDot.setImageResource(R.drawable.priority_dot_blue)
+                        bgDrawable?.setColor(ContextCompat.getColor(this, R.color.priority_default_bg))
                     }
                 }
+                itemRoot.background = bgDrawable
 
-                itemRoot.setBackgroundColor(cardColor)
-                priorityDot.setBackgroundResource(dotDrawable)
+                // Set Category Icon
+                val category = schedule.category.toLowerCase(Locale.ROOT)
+                val iconRes = when {
+                    category.contains("work") || category.contains("pekerjaan") -> R.drawable.ic_work
+                    category.contains("gym") || category.contains("olahraga") -> R.drawable.ic_gym
+                    category.contains("doctor") || category.contains("dokter") -> R.drawable.ic_doctor
+                    category.contains("study") || category.contains("belajar") -> R.drawable.ic_file
+                    category.contains("home") || category.contains("rumah") -> R.drawable.ic_home
+                    else -> R.drawable.ic_calendar
+                }
                 ivCategoryIcon.setImageResource(iconRes)
 
                 binding.eventList.addView(itemView)

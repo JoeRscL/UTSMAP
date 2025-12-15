@@ -17,12 +17,14 @@
         android:padding="16dp">
 
         <TextView
+            android:id="@+id/tvHeaderTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Add task"
             android:textColor="#007AFF"
-            android:textSize="17sp" />
+            android:textSize="17sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/btnCancel"
@@ -43,27 +45,32 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:paddingBottom="100dp"
+            android:clipToPadding="false">
 
-            <!-- Task Title -->
-            <com.google.android.material.textfield.TextInputLayout
+            <!-- Task Label -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Task Title"
+                android:textColor="#007AFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <!-- Task Title (Updated to match Category style) -->
+            <EditText
+                android:id="@+id/etTaskTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:boxBackgroundColor="#EBF4FF"
-                app:boxBackgroundMode="filled"
-                app:boxStrokeWidth="0dp"
-                app:boxStrokeWidthFocused="0dp">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etTaskTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@android:color/transparent"
-                    android:hint="Finish Report"
-                    android:textColorHint="#8E8E93"
-                    android:textSize="16sp" />
-            </com.google.android.material.textfield.TextInputLayout>
+                android:background="@drawable/bg_edittext_gray"
+                android:hint="Finish Report"
+                android:padding="16dp"
+                android:textColor="#000000"
+                android:textColorHint="#8E8E93"
+                android:textSize="16sp" />
 
             <!-- Category Label -->
             <TextView
@@ -75,25 +82,57 @@
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <!-- Category Input -->
-            <com.google.android.material.textfield.TextInputLayout
+            <!-- Category Input (Using TextView for Selection) -->
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:boxBackgroundColor="#EBF4FF"
-                app:boxBackgroundMode="filled"
-                app:boxStrokeWidth="0dp"
-                app:boxStrokeWidthFocused="0dp">
+                android:layout_marginBottom="16dp">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etCategory"
+                <TextView
+                    android:id="@+id/tvCategorySelect"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@android:color/transparent"
-                    android:hint="Category"
-                    android:textColorHint="#8E8E93"
+                    android:background="@drawable/bg_edittext_gray"
+                    android:padding="16dp"
+                    android:text="Please select category"
+                    android:textColor="#8E8E93"
                     android:textSize="16sp" />
-            </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Hidden EditText to store value for compatibility -->
+                <EditText
+                    android:id="@+id/etCategory"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+            <!-- Level Label -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Level"
+                android:textColor="#007AFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <!-- Level Input (Using TextView for Selection) -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:id="@+id/tvLevelSelect"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_edittext_gray"
+                    android:padding="16dp"
+                    android:text="Select urgency level"
+                    android:textColor="#8E8E93"
+                    android:textSize="16sp" />
+            </FrameLayout>
 
             <!-- Date Label -->
             <TextView
@@ -110,19 +149,19 @@
                 android:id="@+id/layoutSetDate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="1dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:background="?android:attr/selectableItemBackground"
+                android:background="@drawable/bg_white_top_rounded"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:padding="16dp">
 
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_marginEnd="12dp"
-                    android:src="@android:drawable/ic_menu_my_calendar"
+                    android:src="@drawable/ic_calendar_outline"
                     app:tint="#FF9500" />
 
                 <TextView
@@ -131,9 +170,15 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Set due date"
-                    android:textColor="#8E8E93"
+                    android:textColor="#3C3C43"
                     android:textSize="16sp" />
             </LinearLayout>
+            
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#E5E5EA"
+                android:layout_marginStart="52dp"/>
 
             <!-- Set Time -->
             <LinearLayout
@@ -143,16 +188,16 @@
                 android:layout_marginBottom="16dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:background="?android:attr/selectableItemBackground"
+                android:background="@drawable/bg_white_bottom_rounded"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:padding="16dp">
 
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_marginEnd="12dp"
-                    android:src="@android:drawable/ic_menu_recent_history"
+                    android:src="@drawable/ic_clock_white"
                     app:tint="#FF3B30" />
 
                 <TextView
@@ -161,7 +206,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Set Time"
-                    android:textColor="#8E8E93"
+                    android:textColor="#3C3C43"
                     android:textSize="16sp" />
             </LinearLayout>
 
@@ -183,21 +228,22 @@
                 android:layout_marginBottom="16dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:background="@drawable/bg_white_rounded"
+                android:padding="16dp">
 
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_marginEnd="12dp"
-                    android:src="@android:drawable/ic_lock_idle_alarm"
-                    app:tint="#8E8E93" />
+                    android:src="@drawable/ic_alert_bell"
+                    app:tint="#FF3B30" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Set Reminder"
-                    android:textColor="#8E8E93"
+                    android:textColor="#3C3C43"
                     android:textSize="16sp" />
             </LinearLayout>
 
@@ -215,10 +261,14 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="80dp"
-                app:boxBackgroundColor="#EBF4FF"
+                android:layout_marginBottom="24dp"
+                app:boxBackgroundColor="#F2F2F7"
                 app:boxBackgroundMode="filled"
                 app:boxStrokeWidth="0dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
                 app:boxStrokeWidthFocused="0dp">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -236,18 +286,38 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Floating Action Button Save -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabSave"
+    <!-- Floating Action Buttons Container (Fixed Position) -->
+    <LinearLayout
+        android:id="@+id/fabContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@id/footerNav"
         android:layout_marginEnd="24dp"
-        android:layout_marginBottom="80dp"
-        android:src="@android:drawable/ic_menu_save"
-        app:backgroundTint="#1E3A8A"
-        app:tint="#FFFFFF" />
+        android:layout_marginBottom="16dp">
+
+        <!-- FAB Delete (Only Visible in Edit Mode) -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:src="@android:drawable/ic_menu_delete"
+            app:backgroundTint="#FF3B30"
+            app:tint="#FFFFFF"
+            android:visibility="gone" />
+
+        <!-- FAB Save/Check -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabSave"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_check_white"
+            app:backgroundTint="#003366"
+            app:tint="#FFFFFF" />
+
+    </LinearLayout>
 
     <!-- Footer Navigation -->
     <include

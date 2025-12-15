@@ -11,4 +11,17 @@
     <color name="gray_600">#6B7280</color>
     <color name="blue">#1E88E5</color>
 
+    <!-- Priority Colors -->
+    <color name="priority_high">#FF3B30</color>
+    <color name="priority_high_bg">#FFF0F0</color>
+
+    <color name="priority_medium">#FFCC00</color>
+    <color name="priority_medium_bg">#FFF9E6</color>
+
+    <color name="priority_low">#34C759</color>
+    <color name="priority_low_bg">#E6F6EC</color>
+
+    <color name="priority_default">#007AFF</color>
+    <color name="priority_default_bg">#F0F8FF</color>
+
 </resources>

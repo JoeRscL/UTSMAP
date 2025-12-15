@@ -65,7 +65,7 @@
                 android:id="@+id/calendarView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:mcv_selectionColor="#007AFF"
+                app:mcv_selectionColor="#FFFFFF"
                 app:mcv_showOtherDates="all"
                 app:mcv_headerTextAppearance="@style/TextAppearance.AppCompat.Medium"
                 app:mcv_weekDayTextAppearance="@style/TextAppearance.AppCompat.Small"

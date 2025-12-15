@@ -3,13 +3,16 @@ package com.example.mindnestapp
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
-import android.widget.CheckBox // [BARU] Tambahkan import ini
+import android.view.View
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
 import com.example.mindnestapp.databinding.ActivityScheduleBinding
 import com.google.firebase.auth.FirebaseAuth
@@ -33,11 +36,13 @@ class ScheduleActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityScheduleBinding
     private lateinit var dayCircles: MutableList<LinearLayout>
-    private lateinit var tempCal: Calendar
-    private var todayIndex: Int = 0
+    private lateinit var calendarDates: MutableList<Date> // Simpan tanggal objek untuk filter
+    private var selectedDate: String = "" // Simpan tanggal yang dipilih user (yyyy-MM-dd)
+    private var selectedIndex: Int = -1 // Indeks hari yang dipilih
     private lateinit var footerHelper: FooterNavHelper
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
+    private var allSchedules = mutableListOf<Schedule>() // Simpan semua jadwal untuk filtering lokal
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +55,11 @@ class ScheduleActivity : AppCompatActivity() {
 
         // 2. Setup Helper & UI
         footerHelper = FooterNavHelper(this)
+        
+        // Default selected date = Today
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        selectedDate = sdf.format(Date())
+
         setupHeader()
         setupWeeklyCalendar()
 
@@ -65,7 +75,13 @@ class ScheduleActivity : AppCompatActivity() {
 
     private fun setupHeader() {
         val headerFormat = SimpleDateFormat("EEEE d MMMM yyyy", Locale.getDefault())
-        binding.tvDate.text = headerFormat.format(Date())
+        // Tampilkan tanggal yang dipilih di header, bukan selalu hari ini
+        try {
+            val dateObj = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(selectedDate)
+            binding.tvDate.text = headerFormat.format(dateObj ?: Date())
+        } catch (e: Exception) {
+            binding.tvDate.text = headerFormat.format(Date())
+        }
 
         val user = auth.currentUser
         if (user != null) {
@@ -83,110 +99,23 @@ class ScheduleActivity : AppCompatActivity() {
         }
     }
 
-    // --- LOGIKA UTAMA: MEMUAT JADWAL & CHECKBOX ---
+    // --- LOGIKA UTAMA: MEMUAT JADWAL ---
     private fun loadSchedules() {
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                // Reset view agar tidak duplikat saat data berubah
-                binding.scheduleContainer.removeAllViews()
+                allSchedules.clear() // Reset local list
 
                 if (snapshot.exists()) {
                     for (child in snapshot.children) {
                         val schedule = child.getValue(Schedule::class.java)
                         schedule?.id = child.key
-
-                        // FILTER: Hanya tampilkan yang BELUM selesai (!isCompleted)
-                        if (schedule != null && !schedule.isCompleted) {
-
-                            // Inflate layout item
-                            val view = layoutInflater.inflate(R.layout.item_schedule_home, binding.scheduleContainer, false)
-
-                            // Binding ID dari XML item
-                            val tvTitle = view.findViewById<TextView>(R.id.tvTitle)
-                            val tvPriority = view.findViewById<TextView>(R.id.tvPriority)
-                            val tvDate = view.findViewById<TextView>(R.id.tvDate)
-                            val tvCategory = view.findViewById<TextView>(R.id.tvCategory)
-                            val tvTime = view.findViewById<TextView>(R.id.tvTime)
-
-                            // [PERUBAHAN UTAMA] Mengambil ID CheckBox
-                            val cbComplete = view.findViewById<CheckBox>(R.id.cbComplete)
-
-                            val btnEdit = view.findViewById<LinearLayout>(R.id.btnEdit)
-//                            val btnSnooze = view.findViewById<LinearLayout>(R.id.btnSnooze)
-
-                            // Tampilkan Data ke Layar
-                            tvTitle.text = schedule.title
-                            tvTime.text = schedule.time
-                            tvCategory.text = schedule.category.ifEmpty { "General" }
-
-                            // Format Tanggal
-                            try {
-                                val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                                val outputFormat = SimpleDateFormat("EEEE d MMM yyyy", Locale.getDefault())
-                                val dateObj = inputFormat.parse(schedule.date)
-                                if (dateObj != null) {
-                                    tvDate.text = outputFormat.format(dateObj).uppercase()
-                                } else {
-                                    tvDate.text = schedule.date
-                                }
-                            } catch (_: Exception) {
-                                tvDate.text = schedule.date
-                            }
-
-                            // Set Label Priority
-                            if (schedule.priority.equals("Tinggi", true) || schedule.priority.equals("High", true)) {
-                                tvPriority.text = "HIGH"
-                            } else {
-                                tvPriority.text = "MEDIUM"
-                            }
-
-                            // --- LOGIKA CHECKBOX COMPLETE ---
-                            // Ketika checkbox diklik/dicentang
-                            cbComplete.setOnClickListener {
-                                if (cbComplete.isChecked) {
-                                    if (schedule.id != null) {
-                                        // Update Firebase: set isCompleted = true
-                                        database.child(schedule.id!!).child("isCompleted").setValue(true)
-                                            .addOnSuccessListener {
-                                                Toast.makeText(this@ScheduleActivity, "Tugas Selesai!", Toast.LENGTH_SHORT).show()
-
-                                                // Hapus view dari layar agar terlihat menghilang
-                                                binding.scheduleContainer.removeView(view)
-                                            }
-                                            .addOnFailureListener {
-                                                // Jika gagal (karena internet dsb), kembalikan checkbox jadi tidak tercentang
-                                                cbComplete.isChecked = false
-                                                Toast.makeText(this@ScheduleActivity, "Gagal mengupdate status", Toast.LENGTH_SHORT).show()
-                                            }
-                                    }
-                                }
-                            }
-
-                            // Tombol Edit
-                            btnEdit.setOnClickListener {
-                                val intent = Intent(this@ScheduleActivity, AddTaskActivity::class.java)
-                                intent.putExtra("taskId", schedule.id)
-                                intent.putExtra("title", schedule.title)
-                                intent.putExtra("category", schedule.category)
-                                intent.putExtra("date", schedule.date)
-                                intent.putExtra("time", schedule.time)
-                                intent.putExtra("notes", schedule.description)
-                                intent.putExtra("isEditMode", true)
-                                startActivity(intent)
-                            }
-
-//                            // Tombol Snooze
-//                            btnSnooze.setOnClickListener {
-//                                Toast.makeText(this@ScheduleActivity, "Snooze clicked", Toast.LENGTH_SHORT).show()
-//                            }
-
-                            // Masukkan kartu ke dalam container
-                            binding.scheduleContainer.addView(view)
+                        if (schedule != null) {
+                            allSchedules.add(schedule)
                         }
                     }
-                } else {
-                    Toast.makeText(this@ScheduleActivity, "Tidak ada jadwal aktif", Toast.LENGTH_SHORT).show()
                 }
+                // Filter dan tampilkan berdasarkan tanggal yang dipilih
+                displaySchedulesForDate(selectedDate)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -195,20 +124,118 @@ class ScheduleActivity : AppCompatActivity() {
         })
     }
 
+    // Fungsi baru untuk memfilter tampilan
+    private fun displaySchedulesForDate(dateStr: String) {
+        binding.scheduleContainer.removeAllViews()
+
+        val filteredSchedules = allSchedules.filter { 
+            it.date == dateStr && !it.isCompleted 
+        }
+
+        if (filteredSchedules.isNotEmpty()) {
+            for (schedule in filteredSchedules) {
+                val view = layoutInflater.inflate(R.layout.item_schedule_home, binding.scheduleContainer, false)
+
+                // Binding ID dari XML item
+                val tvTitle = view.findViewById<TextView>(R.id.tvTitle)
+                val ivPriority = view.findViewById<ImageView>(R.id.ivPriority)
+                val ivCategory = view.findViewById<ImageView>(R.id.ivCategory)
+                val tvTime = view.findViewById<TextView>(R.id.tvTime)
+                val container = view as LinearLayout
+
+                // Tampilkan Data ke Layar
+                tvTitle.text = schedule.title
+                tvTime.text = schedule.time
+
+                // Set Category Icon
+                val categoryIcon = when (schedule.category.lowercase(Locale.getDefault())) {
+                    "work", "pekerjaan", "kantor" -> R.drawable.ic_work
+                    "gym", "olahraga", "workout", "sehat" -> R.drawable.ic_gym
+                    "doctor", "dokter", "health", "kesehatan", "medis" -> R.drawable.ic_doctor
+                    "study", "belajar", "kuliah", "sekolah" -> R.drawable.ic_file
+                    "home", "rumah", "keluarga" -> R.drawable.ic_home
+                    else -> R.drawable.ic_calendar // Default icon
+                }
+                ivCategory.setImageResource(categoryIcon)
+
+                // Set Priority Colors and Icon
+                val bgDrawable = ContextCompat.getDrawable(this@ScheduleActivity, R.drawable.bg_card)?.mutate() as? GradientDrawable
+                
+                when (schedule.priority.lowercase(Locale.getDefault())) {
+                    "tinggi", "high" -> {
+                        ivPriority.setImageResource(R.drawable.priority_dot_red)
+                        bgDrawable?.setColor(ContextCompat.getColor(this@ScheduleActivity, R.color.priority_high_bg))
+                    }
+                    "sedang", "medium" -> {
+                        ivPriority.setImageResource(R.drawable.priority_dot_yellow)
+                        bgDrawable?.setColor(ContextCompat.getColor(this@ScheduleActivity, R.color.priority_medium_bg))
+                    }
+                    "rendah", "low" -> {
+                        ivPriority.setImageResource(R.drawable.priority_dot_green)
+                        bgDrawable?.setColor(ContextCompat.getColor(this@ScheduleActivity, R.color.priority_low_bg))
+                    }
+                    else -> {
+                        ivPriority.setImageResource(R.drawable.priority_dot_blue)
+                        bgDrawable?.setColor(ContextCompat.getColor(this@ScheduleActivity, R.color.priority_default_bg))
+                    }
+                }
+                container.background = bgDrawable
+
+                // Add Click Listener to Edit
+                view.setOnClickListener {
+                    val intent = Intent(this@ScheduleActivity, AddTaskActivity::class.java)
+                    intent.putExtra("taskId", schedule.id)
+                    intent.putExtra("title", schedule.title)
+                    intent.putExtra("category", schedule.category)
+                    intent.putExtra("priority", schedule.priority)
+                    intent.putExtra("date", schedule.date)
+                    intent.putExtra("time", schedule.time)
+                    intent.putExtra("notes", schedule.description)
+                    intent.putExtra("isEditMode", true)
+                    startActivity(intent)
+                }
+
+                // Masukkan kartu ke dalam container
+                binding.scheduleContainer.addView(view)
+            }
+        } else {
+            // Tampilkan pesan kosong jika tidak ada jadwal di tanggal ini
+             // Opsional: Anda bisa inflate layout "Kosong" di sini
+             // val emptyView = layoutInflater.inflate(R.layout.item_no_schedule, binding.scheduleContainer, false)
+             // binding.scheduleContainer.addView(emptyView)
+        }
+    }
+
     private fun setupWeeklyCalendar() {
         dayCircles = mutableListOf()
+        calendarDates = mutableListOf()
+        
         val dayInitials = listOf("S", "M", "T", "W", "T", "F", "S")
         val dateOnlyFormat = SimpleDateFormat("d", Locale.getDefault())
         val monthFormat = SimpleDateFormat("MMM", Locale.getDefault())
+        val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-        tempCal = Calendar.getInstance()
-        tempCal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
-        val currentCal = Calendar.getInstance()
-        todayIndex = currentCal.get(Calendar.DAY_OF_WEEK) - 1
-
+        val tempCal = Calendar.getInstance()
+        tempCal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY) // Start week from Sunday
+        
+        val todayCal = Calendar.getInstance()
+        val todayStr = fullDateFormat.format(todayCal.time)
+        
+        // Cari index hari ini (0-6)
+        selectedIndex = -1 // Reset
+        
         binding.dayContainer.removeAllViews()
 
         for (i in 0..6) {
+            val currentDate = tempCal.time
+            calendarDates.add(currentDate)
+            val currentDateStr = fullDateFormat.format(currentDate)
+            
+            // Set initial selected index to today if matches
+            if (currentDateStr == todayStr && selectedIndex == -1) {
+                selectedIndex = i
+            }
+
             val dayWrapper = LinearLayout(this)
             dayWrapper.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             dayWrapper.gravity = Gravity.CENTER
@@ -218,19 +245,17 @@ class ScheduleActivity : AppCompatActivity() {
             circle.layoutParams = LinearLayout.LayoutParams(50.dp, 80.dp)
             circle.orientation = LinearLayout.VERTICAL
             circle.gravity = Gravity.CENTER
-            val isToday = (i == todayIndex)
-
-            circle.setBackgroundResource(if (isToday) R.drawable.bg_day_pill_selected else R.drawable.bg_day_pill_unselected)
-
+            
+            // Initial styling will be updated in updateDaySelection()
+            
             val tvDay = TextView(this)
             tvDay.text = dayInitials[i]
             tvDay.textSize = 14f
             tvDay.setTypeface(null, Typeface.BOLD)
             tvDay.gravity = Gravity.CENTER
-            tvDay.setTextColor(if (isToday) Color.WHITE else "#8E8E93".toColorInt())
-
-            val dateText = dateOnlyFormat.format(tempCal.time)
-            val monthText = monthFormat.format(tempCal.time)
+            
+            val dateText = dateOnlyFormat.format(currentDate)
+            val monthText = monthFormat.format(currentDate)
 
             val tvDate = TextView(this)
             val fullDateText = """
@@ -240,7 +265,6 @@ class ScheduleActivity : AppCompatActivity() {
             tvDate.text = fullDateText
             tvDate.textSize = 10f
             tvDate.gravity = Gravity.CENTER
-            tvDate.setTextColor(if (isToday) Color.WHITE else "#8E8E93".toColorInt())
             tvDate.setLines(2)
 
             circle.addView(tvDay)
@@ -248,7 +272,51 @@ class ScheduleActivity : AppCompatActivity() {
             dayWrapper.addView(circle)
             binding.dayContainer.addView(dayWrapper)
             dayCircles.add(circle)
+            
+            // Click Listener untuk Ganti Tanggal
+            val index = i
+            circle.setOnClickListener {
+                selectedIndex = index
+                val newDate = calendarDates[index]
+                selectedDate = fullDateFormat.format(newDate)
+                
+                // Update UI Header Tanggal
+                val headerFormat = SimpleDateFormat("EEEE d MMMM yyyy", Locale.getDefault())
+                binding.tvDate.text = headerFormat.format(newDate)
+                
+                // Update UI Calendar Selection
+                updateDaySelection()
+                
+                // Filter List Jadwal
+                displaySchedulesForDate(selectedDate)
+            }
+
             tempCal.add(Calendar.DAY_OF_MONTH, 1)
+        }
+        
+        // Jika hari ini tidak ada dalam rentang minggu ini (kasus jarang jika logic benar), default ke index 0
+        if (selectedIndex == -1) selectedIndex = 0
+        
+        updateDaySelection()
+    }
+    
+    private fun updateDaySelection() {
+        for (i in dayCircles.indices) {
+            val circle = dayCircles[i]
+            val tvDay = circle.getChildAt(0) as TextView
+            val tvDate = circle.getChildAt(1) as TextView
+            
+            if (i == selectedIndex) {
+                // Selected Style
+                circle.setBackgroundResource(R.drawable.bg_day_pill_selected)
+                tvDay.setTextColor(Color.WHITE)
+                tvDate.setTextColor(Color.WHITE)
+            } else {
+                // Unselected Style
+                circle.setBackgroundResource(R.drawable.bg_day_pill_unselected)
+                tvDay.setTextColor("#8E8E93".toColorInt())
+                tvDate.setTextColor("#8E8E93".toColorInt())
+            }
         }
     }
 
