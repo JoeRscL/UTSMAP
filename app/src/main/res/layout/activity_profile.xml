@@ -31,9 +31,17 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <View
-            android:layout_width="24dp"
-            android:layout_height="24dp"/> </LinearLayout>
+        <!-- Tombol Logout Teks -->
+        <TextView
+            android:id="@+id/btnLogout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Log Out"
+            android:textColor="#FF3B30"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:padding="8dp"/>
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -137,7 +145,7 @@
             <LinearLayout
                 android:id="@+id/layoutDateOfBirth"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="55dp"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/bg_edittext_outline"
                 android:gravity="center_vertical"

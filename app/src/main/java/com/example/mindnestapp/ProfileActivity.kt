@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
@@ -102,8 +103,34 @@ class ProfileActivity : AppCompatActivity() {
             showDatePickerDialog()
         }
 
+        // --- LOGOUT DENGAN ALERT DIALOG ---
+        binding.btnLogout.setOnClickListener {
+            showLogoutConfirmationDialog()
+        }
+
         // Daftarkan EditText nomor telepon ke CCP di sini agar tidak berulang kali
         binding.ccp.registerCarrierNumberEditText(binding.etPhoneNumber)
+    }
+
+    private fun showLogoutConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Konfirmasi Logout")
+            .setMessage("Apakah Anda yakin ingin logout?")
+            .setPositiveButton("Logout") { dialog, _ ->
+                // Lanjutkan proses logout
+                auth.signOut()
+                Toast.makeText(this, "Berhasil logout", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, login::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Batal") { dialog, _ ->
+                // Tutup dialog
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun showDatePickerDialog() {
@@ -255,46 +282,52 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun uploadImageToFirebase() {
-        imageUri?.let { uri ->
-            binding.progressBar.visibility = View.VISIBLE
-    
-            val userId = auth.currentUser?.uid
-            if (userId == null) {
-                binding.progressBar.visibility = View.GONE
-                Toast.makeText(this, "Sesi pengguna tidak valid, silakan login ulang.", Toast.LENGTH_SHORT).show()
-                return
+        val uri = imageUri ?: return
+        val userId = auth.currentUser?.uid ?: return
+
+        // Tampilkan loading dan disable interaksi
+        binding.progressBar.visibility = View.VISIBLE
+        binding.btnUpdateProfile.isEnabled = false
+        binding.ivProfile.isEnabled = false
+
+        // Simpan di folder profile_images/UID.jpg
+        val storageRef = FirebaseStorage.getInstance().reference.child("profile_images/$userId.jpg")
+
+        // Gunakan continueWithTask untuk memastikan urutan: Upload -> Get Download URL
+        storageRef.putFile(uri)
+            .continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    task.exception?.let { throw it }
+                }
+                storageRef.downloadUrl
             }
-    
-            val storageRef = FirebaseStorage.getInstance().getReference("profile_images/$userId.jpg")
-    
-            storageRef.putFile(uri)
-                .addOnSuccessListener {
-                    // Setelah upload berhasil, dapatkan URL download
-                    storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                        updateProfileImageUrl(downloadUrl.toString())
-                    }.addOnFailureListener {
-                        // Gagal mendapatkan URL, bisa jadi karena aturan read
-                        binding.progressBar.visibility = View.GONE
-                        Toast.makeText(this, "Upload berhasil, tapi gagal mendapatkan URL gambar.", Toast.LENGTH_SHORT).show()
-                    }
+            .addOnCompleteListener { task ->
+                // Sembunyikan loading dan enable interaksi
+                binding.progressBar.visibility = View.GONE
+                binding.btnUpdateProfile.isEnabled = true
+                binding.ivProfile.isEnabled = true
+
+                if (task.isSuccessful) {
+                    val downloadUri = task.result
+                    updateProfileImageUrl(downloadUri.toString())
+                } else {
+                    val e = task.exception
+                    Log.e("ProfileActivity", "Upload Error", e)
+                    // Menampilkan pesan error yang lebih user-friendly jika error code diketahui
+                    val msg = e?.message ?: "Terjadi kesalahan saat upload."
+                    Toast.makeText(this@ProfileActivity, "Upload Gagal: $msg", Toast.LENGTH_LONG).show()
                 }
-                .addOnFailureListener { exception ->
-                    binding.progressBar.visibility = View.GONE
-                    // Pesan error yang lebih deskriptif untuk membantu debugging
-                    Toast.makeText(this, "Upload gagal. Periksa aturan keamanan Firebase Storage Anda. Error: ${exception.message}", Toast.LENGTH_LONG).show()
-                }
-        }
+            }
     }
 
     private fun updateProfileImageUrl(url: String) {
         database.child("profileImageUrl").setValue(url)
             .addOnSuccessListener {
-                binding.progressBar.visibility = View.GONE
                 Toast.makeText(this, "Foto profil berhasil diperbarui!", Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener {
-                binding.progressBar.visibility = View.GONE
-                Toast.makeText(this, "Gagal memperbarui URL database.", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener { e ->
+                Log.e("ProfileActivity", "Database Error", e)
+                Toast.makeText(this, "Gagal menyimpan ke database: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 }
