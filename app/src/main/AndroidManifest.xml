@@ -6,6 +6,13 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
+    <!-- Izin untuk Notifikasi dan Alarm -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -14,7 +21,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MindnestApp">
 
-        <!-- Ubah SplashActivity menjadi LAUNCHER -->
+        <!-- ... (Aktivitas lainnya) ... -->
+        
         <activity
             android:name=".SplashActivity"
             android:exported="true">
@@ -24,7 +32,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Hapus intent-filter LAUNCHER dari login -->
         <activity
             android:name=".login"
             android:exported="false" />
@@ -51,6 +58,13 @@
 
         <activity
             android:name=".ViewScheduleActivity"
+            android:exported="false" />
+
+
+        <!-- Daftarkan BroadcastReceiver untuk Alarm -->
+        <receiver
+            android:name=".AlarmReceiver"
+            android:enabled="true"
             android:exported="false" />
 
         <provider

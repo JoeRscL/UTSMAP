@@ -51,20 +51,6 @@ class HolidayDecorator(private val holidays: Set<CalendarDay>) : DayViewDecorato
     }
 }
 
-// Decorator untuk Hari Minggu
-class SundayDecorator : DayViewDecorator {
-    private val calendar = Calendar.getInstance()
-    override fun shouldDecorate(day: CalendarDay): Boolean {
-        day.copyTo(calendar)
-        val weekDay = calendar.get(Calendar.DAY_OF_WEEK)
-        return weekDay == Calendar.SUNDAY
-    }
-
-    override fun decorate(view: DayViewFacade) {
-        view.addSpan(android.text.style.ForegroundColorSpan(Color.RED))
-    }
-}
-
 class ViewScheduleActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityViewScheduleBinding
@@ -183,9 +169,6 @@ class ViewScheduleActivity : AppCompatActivity() {
 
     private fun updateCalendarDecorators() {
         binding.calendarView.removeDecorators()
-
-        // Tambahkan decorator hari minggu
-        binding.calendarView.addDecorator(SundayDecorator())
 
         // 1. Decorator untuk Hari Libur
         val holidayDates = mutableSetOf<CalendarDay>()

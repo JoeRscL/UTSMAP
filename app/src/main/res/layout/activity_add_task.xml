@@ -35,19 +35,19 @@
             android:textSize="17sp" />
     </LinearLayout>
 
+    <!-- Konten Scroll -->
     <ScrollView
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/footerNav"
-        android:layout_below="@id/headerLayout">
+        android:layout_below="@id/headerLayout"
+        android:layout_above="@id/footerNav">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:paddingBottom="100dp"
-            android:clipToPadding="false">
+            android:padding="16dp">
 
             <!-- Task Label -->
             <TextView
@@ -59,7 +59,7 @@
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <!-- Task Title (Updated to match Category style) -->
+            <!-- Task Title -->
             <EditText
                 android:id="@+id/etTaskTitle"
                 android:layout_width="match_parent"
@@ -82,8 +82,9 @@
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <!-- Category Input (Using TextView for Selection) -->
+            <!-- Category Input -->
             <FrameLayout
+                android:id="@+id/layoutCategory"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp">
@@ -98,13 +99,11 @@
                     android:textColor="#8E8E93"
                     android:textSize="16sp" />
 
-                <!-- Hidden EditText to store value for compatibility -->
                 <EditText
                     android:id="@+id/etCategory"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
                     android:visibility="gone" />
-
             </FrameLayout>
 
             <!-- Level Label -->
@@ -117,8 +116,9 @@
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <!-- Level Input (Using TextView for Selection) -->
+            <!-- Level Input -->
             <FrameLayout
+                android:id="@+id/layoutLevel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp">
@@ -173,7 +173,7 @@
                     android:textColor="#3C3C43"
                     android:textSize="16sp" />
             </LinearLayout>
-            
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -210,42 +210,15 @@
                     android:textSize="16sp" />
             </LinearLayout>
 
-            <!-- Reminder Label -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:text="Reminder"
-                android:textColor="#007AFF"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <!-- Set Reminder -->
-            <LinearLayout
-                android:id="@+id/layoutSetReminder"
+            <!-- Reminder Section -->
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchReminder"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:background="@drawable/bg_white_rounded"
-                android:padding="16dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_alert_bell"
-                    app:tint="#FF3B30" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Set Reminder"
-                    android:textColor="#3C3C43"
-                    android:textSize="16sp" />
-            </LinearLayout>
+                android:text="Set Reminder"
+                android:textSize="16sp"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp" />
 
             <!-- Notes Label -->
             <TextView
@@ -283,43 +256,41 @@
                     android:textSize="16sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Action Buttons Container -->
+            <LinearLayout
+                android:id="@+id/fabContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_gravity="end"
+                android:layout_marginBottom="24dp">
+
+                <!-- FAB Delete (Only in Edit Mode) -->
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabDelete"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:src="@android:drawable/ic_menu_delete"
+                    app:backgroundTint="#FF3B30"
+                    app:tint="#FFFFFF"
+                    android:visibility="gone" />
+
+                <!-- FAB Save -->
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabSave"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_check_white"
+                    app:backgroundTint="#003366"
+                    app:tint="#FFFFFF" />
+
+            </LinearLayout>
+
         </LinearLayout>
     </ScrollView>
 
-    <!-- Floating Action Buttons Container (Fixed Position) -->
-    <LinearLayout
-        android:id="@+id/fabContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_alignParentEnd="true"
-        android:layout_above="@id/footerNav"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="16dp">
-
-        <!-- FAB Delete (Only Visible in Edit Mode) -->
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabDelete"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:src="@android:drawable/ic_menu_delete"
-            app:backgroundTint="#FF3B30"
-            app:tint="#FFFFFF"
-            android:visibility="gone" />
-
-        <!-- FAB Save/Check -->
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabSave"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_check_white"
-            app:backgroundTint="#003366"
-            app:tint="#FFFFFF" />
-
-    </LinearLayout>
-
-    <!-- Footer Navigation -->
+    <!-- Footer Navigation (Fixed) -->
     <include
         android:id="@+id/footerNav"
         layout="@layout/layout_footer_nav"
