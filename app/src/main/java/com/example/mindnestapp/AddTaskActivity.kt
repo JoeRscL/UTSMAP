@@ -10,8 +10,10 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.mindnestapp.databinding.ActivityAddTaskBinding
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import java.text.SimpleDateFormat
@@ -21,8 +23,8 @@ import java.util.Locale
 class AddTaskActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAddTaskBinding
-    // Pastikan path database SAMA dengan ScheduleActivity ("schedules")
-    private val database = FirebaseDatabase.getInstance().getReference("schedules")
+    private lateinit var database: DatabaseReference
+    private lateinit var auth: FirebaseAuth
     private lateinit var footerHelper: FooterNavHelper
 
     // Variabel untuk menyimpan tanggal dan waktu
@@ -39,6 +41,16 @@ class AddTaskActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityAddTaskBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        auth = FirebaseAuth.getInstance()
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Toast.makeText(this, "User tidak terautentikasi.", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+        // Mengarahkan database ke node user yang spesifik
+        database = FirebaseDatabase.getInstance().getReference("schedules").child(currentUser.uid)
 
         // 1. CEK DATA DARI INTENT (APAKAH INI EDIT MODE?)
         checkEditMode()
@@ -278,35 +290,17 @@ class AddTaskActivity : AppCompatActivity() {
                     Toast.makeText(this, "Failed to update: ${it.message}", Toast.LENGTH_SHORT).show()
                 }
         } else {
-            // JIKA BARU: Buat ID baru (Logic Anda yang lama)
-            database.orderByKey().limitToLast(1).addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    var newScheduleIdNumber = 1
-                    if (snapshot.exists()) {
-                        val lastScheduleKey = snapshot.children.first().key
-                        lastScheduleKey?.let {
-                            val lastNumber = it.substringAfter("schedule_").toIntOrNull() ?: 0
-                            newScheduleIdNumber = lastNumber + 1
-                        }
-                    }
-
-                    val newScheduleId = "schedule_${String.format("%03d", newScheduleIdNumber)}"
-
-                    database.child(newScheduleId).setValue(taskData)
-                        .addOnSuccessListener {
-                            Toast.makeText(this@AddTaskActivity, "Task Saved!", Toast.LENGTH_SHORT).show()
-                            startActivity(Intent(this@AddTaskActivity, ScheduleActivity::class.java))
-                            finishAffinity()
-                        }
-                        .addOnFailureListener {
-                            Toast.makeText(this@AddTaskActivity, "Failed to save: ${it.message}", Toast.LENGTH_LONG).show()
-                        }
+            // JIKA BARU: Buat ID baru
+            val newTaskId = database.push().key ?: "task_${System.currentTimeMillis()}"
+            database.child(newTaskId).setValue(taskData)
+                .addOnSuccessListener {
+                    Toast.makeText(this@AddTaskActivity, "Task Saved!", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this@AddTaskActivity, ScheduleActivity::class.java))
+                    finishAffinity()
                 }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@AddTaskActivity, "DB Error: ${error.message}", Toast.LENGTH_LONG).show()
+                .addOnFailureListener {
+                    Toast.makeText(this@AddTaskActivity, "Failed to save: ${it.message}", Toast.LENGTH_LONG).show()
                 }
-            })
         }
     }
 }

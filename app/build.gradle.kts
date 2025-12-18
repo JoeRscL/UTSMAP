@@ -67,6 +67,9 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-database-ktx")
 
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+
     // Compose
     implementation(platform("androidx.compose:compose-bom:2024.04.00"))
     implementation("androidx.compose.ui:ui")
@@ -78,7 +81,7 @@ dependencies {
     implementation("com.github.prolificinteractive:material-calendarview:1.6.0")
     implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation("com.github.bumptech.glide:glide:4.12.0")
-    
+
     // Country Code Picker
     implementation("com.hbb20:ccp:2.5.1")
 

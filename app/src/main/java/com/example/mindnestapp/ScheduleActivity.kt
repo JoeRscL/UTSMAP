@@ -51,7 +51,13 @@ class ScheduleActivity : AppCompatActivity() {
 
         // 1. Inisialisasi Firebase
         auth = FirebaseAuth.getInstance()
-        database = FirebaseDatabase.getInstance().getReference("schedules")
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Toast.makeText(this, "User tidak terautentikasi.", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+        database = FirebaseDatabase.getInstance().getReference("schedules").child(currentUser.uid)
 
         // 2. Setup Helper & UI
         footerHelper = FooterNavHelper(this)
@@ -200,9 +206,8 @@ class ScheduleActivity : AppCompatActivity() {
             }
         } else {
             // Tampilkan pesan kosong jika tidak ada jadwal di tanggal ini
-             // Opsional: Anda bisa inflate layout "Kosong" di sini
-             // val emptyView = layoutInflater.inflate(R.layout.item_no_schedule, binding.scheduleContainer, false)
-             // binding.scheduleContainer.addView(emptyView)
+             val emptyView = layoutInflater.inflate(R.layout.item_no_schedule, binding.scheduleContainer, false)
+             binding.scheduleContainer.addView(emptyView)
         }
     }
 

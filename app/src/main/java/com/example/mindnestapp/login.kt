@@ -9,11 +9,13 @@ import com.example.mindnestapp.databinding.ActivityLoginBinding // Import bindin
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.database.FirebaseDatabase
 
 class login : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding // Declare binding variable
     private lateinit var auth: FirebaseAuth
+    private lateinit var database: FirebaseDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,6 +24,7 @@ class login : AppCompatActivity() {
         setContentView(binding.root) // Set content view
 
         auth = FirebaseAuth.getInstance()
+        database = FirebaseDatabase.getInstance()
 
         binding.btnLogin.setOnClickListener { // Access view via binding
             val email = binding.etEmail.text.toString().trim()
@@ -33,9 +36,21 @@ class login : AppCompatActivity() {
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            val intent = Intent(this, ScheduleActivity::class.java)
-                            startActivity(intent)
-                            finish()
+                            val user = auth.currentUser
+                            user?.let {
+                                // Simpan email ke Realtime Database
+                                val userRef = database.getReference("users").child(it.uid)
+                                userRef.child("email").setValue(email)
+                                    .addOnSuccessListener {
+                                        // Lanjutkan ke halaman utama setelah berhasil menyimpan
+                                        val intent = Intent(this, ScheduleActivity::class.java)
+                                        startActivity(intent)
+                                        finish()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(this, "Gagal menyimpan email: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                            }
                         } else {
                             when (val exception = task.exception) {
                                 is FirebaseAuthInvalidUserException -> {
