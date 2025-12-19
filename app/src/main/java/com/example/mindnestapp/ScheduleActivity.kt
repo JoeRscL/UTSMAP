@@ -12,14 +12,20 @@ import android.view.Gravity
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
 import com.example.mindnestapp.databinding.ActivityScheduleBinding
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -60,15 +66,15 @@ class ScheduleActivity : AppCompatActivity() {
         database = FirebaseDatabase.getInstance().getReference("schedules").child(currentUser.uid)
 
         footerHelper = FooterNavHelper(this)
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        selectedDate = sdf.format(Date())
+        footerHelper.setupFooterNavigation()
+
+        selectedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
         setupWeeklyCalendar()
         loadSchedules()
-        footerHelper.setupFooterNavigation()
 
-        binding.ivProfileSmall.setOnClickListener {
-            startActivity(Intent(this, ProfileActivity::class.java))
+        binding.ivSettings.setOnClickListener { view ->
+            showSettingsMenu(view)
         }
     }
 
@@ -77,41 +83,51 @@ class ScheduleActivity : AppCompatActivity() {
         setupHeader()
     }
 
+    private fun showSettingsMenu(anchor: View) {
+        val popup = PopupMenu(this, anchor)
+        popup.menuInflater.inflate(R.menu.settings_menu, popup.menu)
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_light_mode -> {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    true
+                }
+                R.id.action_dark_mode -> {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
     private fun setupHeader() {
-        val headerFormat = SimpleDateFormat("EEEE d MMMM yyyy", Locale.getDefault())
+        val user = auth.currentUser ?: return
+        val userRef = FirebaseDatabase.getInstance().getReference("users").child(user.uid)
+        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val firstName = snapshot.child("firstName").getValue(String::class.java) ?: "User"
+                binding.tvUserName.text = "Hi, $firstName"
+                
+                binding.ivSettings.setImageResource(R.drawable.ic_settings)
+                binding.ivSettings.setColorFilter(ContextCompat.getColor(applicationContext, R.color.blue_700))
+            }
+            override fun onCancelled(error: DatabaseError) { 
+                binding.tvUserName.text = "Hi, User"
+                binding.ivSettings.setImageResource(R.drawable.ic_settings)
+                binding.ivSettings.setColorFilter(ContextCompat.getColor(applicationContext, R.color.blue_700))
+            }
+        })
+
+        val headerFormat = SimpleDateFormat("EEEE, d MMMM yyyy", Locale("id", "ID"))
         try {
             val dateObj = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(selectedDate)
             binding.tvDate.text = headerFormat.format(dateObj ?: Date())
-        } catch (e: Exception) { /* Default */ }
-
-        val user = auth.currentUser ?: return
-        val userRef = FirebaseDatabase.getInstance().getReference("users").child(user.uid)
-
-        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val firstName = snapshot.child("firstName").getValue(String::class.java)
-                val displayName = if (!firstName.isNullOrBlank()) firstName else "User"
-                binding.tvUserName.text = "Hi, $displayName"
-
-                val base64Image = snapshot.child("profileImageBase64").getValue(String::class.java)
-                if (!base64Image.isNullOrEmpty()) {
-                    try {
-                        val imageBytes = Base64.decode(base64Image, Base64.DEFAULT)
-                        val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                        binding.ivProfileSmall.setImageBitmap(decodedImage)
-                    } catch (e: Exception) {
-                        binding.ivProfileSmall.setImageResource(R.drawable.ic_default_profile)
-                    }
-                } else {
-                    binding.ivProfileSmall.setImageResource(R.drawable.ic_default_profile)
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                binding.tvUserName.text = "Hi, User"
-                binding.ivProfileSmall.setImageResource(R.drawable.ic_default_profile)
-            }
-        })
+        } catch (e: Exception) { 
+             binding.tvDate.text = headerFormat.format(Date())
+        }
     }
 
     private fun loadSchedules() {
@@ -127,7 +143,9 @@ class ScheduleActivity : AppCompatActivity() {
                 }
                 displaySchedulesForDate(selectedDate)
             }
-            override fun onCancelled(error: DatabaseError) { /*...*/ }
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@ScheduleActivity, "Gagal memuat jadwal.", Toast.LENGTH_SHORT).show()
+            }
         })
     }
 
@@ -197,7 +215,7 @@ class ScheduleActivity : AppCompatActivity() {
         calendarDates = mutableListOf()
         
         val dayInitials = listOf("S", "M", "T", "W", "T", "F", "S")
-        val dateWithMonthFormat = SimpleDateFormat("d MMM", Locale.getDefault()) // Format baru: 2 Oct
+        val dateWithMonthFormat = SimpleDateFormat("d MMM", Locale.getDefault())
 
         val tempCal = Calendar.getInstance()
         tempCal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
@@ -224,7 +242,7 @@ class ScheduleActivity : AppCompatActivity() {
             val tvDate = dayWrapper.findViewById<TextView>(R.id.tv_day_number)
             
             tvDay.text = dayInitials[i]
-            tvDate.text = dateWithMonthFormat.format(currentDate) // Gunakan format baru
+            tvDate.text = dateWithMonthFormat.format(currentDate)
 
             binding.dayContainer.addView(dayWrapper)
             dayCircles.add(circle)
@@ -247,7 +265,7 @@ class ScheduleActivity : AppCompatActivity() {
     }
     
     private fun updateDaySelection() {
-        for (i in dayCircles.indices) {
+        for (i in 0 until dayCircles.size) {
             val circle = dayCircles[i]
             val dayWrapper = circle.parent as View
             val tvDay = dayWrapper.findViewById<TextView>(R.id.tv_day_initial)

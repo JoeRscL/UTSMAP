@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!--
-    Tema utama aplikasi.
-    Parent theme sudah benar menggunakan MaterialComponents, yang akan memperbaiki
-    error crash saat membuka halaman yang menggunakan komponen Material Design.
-    -->
+
     <style name="Theme.MindnestApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Warna utama aplikasi -->
-        <item name="colorPrimary">#6200EE</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <!-- Anda bisa menambahkan kustomisasi lain di sini -->
+        <!-- Atribut Warna untuk Mode Terang (Light Mode) -->
+        <item name="colorPrimary">@color/blue_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        
+        <!-- Atribut Kustom untuk UI -->
+        <item name="backgroundColor">@color/white</item>
+        <item name="textColorPrimary">@color/black</item>
+        <item name="textColorSecondary">@color/gray_600</item>
+        <item name="cardBackgroundColor">#F0F0F0</item> 
     </style>
 
 </resources>

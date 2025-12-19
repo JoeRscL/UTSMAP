@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Warna Primer untuk Teks, Latar Belakang, dll. -->
+    <color name="backgroundColor">#121212</color>
+    <color name="textColorPrimary">#FFFFFF</color>
+    <color name="textColorSecondary">#B3FFFFFF</color> <!-- 70% white -->
+    <color name="cardBackgroundColor">#1E1E1E</color>
+    <color name="colorPrimary">#BB86FC</color>
+
+    <!-- Warna Spesifik Aplikasi -->
+    <color name="blue_700">#3700B3</color> 
+    <color name="gray_600">#A9A9A9</color>
+    <color name="blue">#3700B3</color>
+
+    <!-- Warna Prioritas untuk Background Kartu -->
+    <color name="priority_high_bg">#4A1F1F</color>
+    <color name="priority_medium_bg">#4A3C1F</color>
+    <color name="priority_low_bg">#1F4A2D</color>
+    <color name="priority_default_bg">#1F3C4A</color>
+</resources>

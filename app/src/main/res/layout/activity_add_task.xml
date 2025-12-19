@@ -254,7 +254,7 @@
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
                     android:gravity="top"
-                    android:hint="Make sure to research from internet"
+                    android:hint="Add notes here"
                     android:minLines="4"
                     android:textColorHint="#8E8E93"
                     android:textSize="16sp" />

@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    android:background="#F9FAFB"
+    android:background="?attr/backgroundColor"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ScheduleActivity">
@@ -12,60 +12,57 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="16dp">
+
+        <TextView
+            android:id="@+id/tvDate"
+            tools:text="Saturday 2 October 2024"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="14sp"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:id="@+id/ivSettings"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_settings"
+            app:tint="?attr/colorPrimary"/>
+    </LinearLayout>
+
+    <!-- Welcome Message -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingHorizontal="24dp"
-        android:paddingVertical="24dp"
-        android:background="#F9FAFB">
-
-        <!-- Baris Atas: Tanggal dan Icon Profil -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:id="@+id/tvDate"
-                android:text="Saturday 2 October 2024"
-                android:textColor="#0056D2"
-                android:textSize="14sp"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content" />
-
-            <ImageView
-                android:id="@+id/ivProfileSmall"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_default_profile"
-                android:background="@drawable/bg_circle_outline"
-                android:padding="2dp" /> 
-                <!-- Anda bisa ganti src dengan ic_profile jika ada, atau gunakan CircleImageView -->
-        </LinearLayout>
+        android:paddingBottom="24dp">
 
         <TextView
             android:id="@+id/tvWelcome"
             android:text="Welcome Back!"
             android:textStyle="bold"
             android:textSize="28sp"
-            android:textColor="#0D2C6B"
-            android:layout_marginTop="16dp"
+            android:textColor="?attr/colorPrimary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <TextView
             android:id="@+id/tvUserName"
-            android:text="Hi, Choudary Aoun"
+            tools:text="Hi, Choudary Aoun"
             android:textSize="18sp"
-            android:textColor="#111827"
+            android:textColor="?attr/textColorPrimary"
             android:layout_marginTop="4dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
     </LinearLayout>
 
-    <!-- Kalender Mingguan (Pill Shape) -->
-    <!-- Menggunakan HorizontalScrollView agar aman di layar kecil, tapi di gambar terlihat fit screen -->
+    <!-- Kalender Mingguan -->
     <LinearLayout
         android:id="@+id/dayContainer"
         android:layout_width="match_parent"

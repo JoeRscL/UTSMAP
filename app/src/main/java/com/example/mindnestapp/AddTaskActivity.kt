@@ -12,6 +12,7 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,6 +28,7 @@ import com.google.firebase.database.ValueEventListener
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import kotlin.math.abs
 
 class AddTaskActivity : AppCompatActivity() {
 
@@ -43,7 +45,6 @@ class AddTaskActivity : AppCompatActivity() {
     private var isEditMode = false
     private var taskId: String? = null
 
-    // Launcher untuk meminta izin notifikasi
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -87,12 +88,10 @@ class AddTaskActivity : AppCompatActivity() {
             if (taskId != null) {
                 database.child(taskId!!).addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-                        if (snapshot.exists()) {
-                            populateFormFromSnapshot(snapshot)
-                        }
+                        if (snapshot.exists()) populateFormFromSnapshot(snapshot)
                     }
-                    override fun onCancelled(error: DatabaseError) {
-                        Toast.makeText(this@AddTaskActivity, "Gagal memuat data tugas.", Toast.LENGTH_SHORT).show()
+                    override fun onCancelled(error: DatabaseError) { 
+                        Toast.makeText(this@AddTaskActivity, "Gagal memuat data.", Toast.LENGTH_SHORT).show()
                     }
                 })
             }
@@ -110,8 +109,8 @@ class AddTaskActivity : AppCompatActivity() {
                 binding.tvCategorySelect.text = selectedCategory
                 binding.tvCategorySelect.setTextColor(Color.BLACK)
             } else {
-                binding.tvCategorySelect.text = "Please select category"
-                binding.tvCategorySelect.setTextColor(Color.parseColor("#8E8E93"))
+                 binding.tvCategorySelect.text = "Please select category"
+                 binding.tvCategorySelect.setTextColor(Color.parseColor("#8E8E93"))
             }
             binding.etCategory.setText(selectedCategory)
 
@@ -151,59 +150,71 @@ class AddTaskActivity : AppCompatActivity() {
     }
 
     private fun saveTaskToFirebase() {
-        val title = binding.etTaskTitle.text.toString().trim()
-        val isReminderOn = binding.switchReminder.isChecked
+        try {
+            val title = binding.etTaskTitle.text.toString().trim()
+            val isReminderOn = binding.switchReminder.isChecked
 
-        if (title.isEmpty() || selectedDate.isEmpty() || selectedTime.isEmpty()) {
-            Toast.makeText(this, "Judul, tanggal, dan waktu harus diisi", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if (isReminderOn && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            if (title.isEmpty() || selectedDate.isEmpty() || selectedTime.isEmpty()) {
+                Toast.makeText(this, "Judul, tanggal, dan waktu harus diisi", Toast.LENGTH_SHORT).show()
                 return
             }
-        }
 
-        val taskData = mapOf(
-            "title" to title,
-            "description" to binding.etNotes.text.toString().trim(),
-            "category" to selectedCategory,
-            "priority" to (if (selectedLevel.isEmpty()) "Medium" else selectedLevel),
-            "date" to selectedDate,
-            "time" to selectedTime,
-            "isCompleted" to false,
-            "reminderEnabled" to isReminderOn
-        )
-        
-        val finalTaskId = if (isEditMode) taskId!! else database.push().key!!
-
-        database.child(finalTaskId).setValue(taskData).addOnSuccessListener {
-            if (isReminderOn) {
-                scheduleAlarm(finalTaskId, title)
-            } else {
-                cancelAlarm(finalTaskId)
+            if (isReminderOn && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    return
+                }
             }
-            Toast.makeText(this, if (isEditMode) "Task Updated!" else "Task Saved!", Toast.LENGTH_SHORT).show()
-            finishAffinity()
-        }.addOnFailureListener { 
-            Toast.makeText(this, "Gagal menyimpan: ${it.message}", Toast.LENGTH_LONG).show()
+
+            val taskData = mapOf(
+                "title" to title,
+                "description" to binding.etNotes.text.toString().trim(),
+                "category" to selectedCategory,
+                "priority" to (if (selectedLevel.isEmpty()) "Medium" else selectedLevel),
+                "date" to selectedDate,
+                "time" to selectedTime,
+                "isCompleted" to false,
+                "reminderEnabled" to isReminderOn
+            )
+            
+            val finalTaskId = if (isEditMode) taskId!! else database.push().key!!
+
+            database.child(finalTaskId).setValue(taskData).addOnSuccessListener {
+                if (isReminderOn) {
+                    scheduleAlarm(finalTaskId, title)
+                } else {
+                    if(isEditMode) cancelAlarm(finalTaskId)
+                }
+                Toast.makeText(this, if (isEditMode) "Task Updated!" else "Task Saved!", Toast.LENGTH_SHORT).show()
+                
+                // **PERBAIKAN KRUSIAL**: Mengganti finishAffinity() dengan finish()
+                finish() 
+
+            }.addOnFailureListener { 
+                Toast.makeText(this, "Gagal menyimpan: ${it.message}", Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) {
+            Log.e("AddTaskActivity", "Error in saveTaskToFirebase", e)
+            Toast.makeText(this, "Terjadi error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
-    private fun scheduleAlarm(taskId: String, taskTitle: String) {
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(this, AlarmReceiver::class.java).apply {
-            putExtra("TASK_ID", taskId)
-            putExtra("TASK_TITLE", taskTitle)
-        }
-        
-        val requestCode = taskId.hashCode()
-        val pendingIntent = PendingIntent.getBroadcast(this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    private fun getStableRequestCode(taskId: String): Int {
+        return abs(taskId.takeLast(6).hashCode())
+    }
 
-        val calendar = Calendar.getInstance().apply {
-            try {
+    private fun scheduleAlarm(taskId: String, taskTitle: String) {
+        try {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(this, AlarmReceiver::class.java).apply {
+                putExtra("TASK_ID", taskId)
+                putExtra("TASK_TITLE", taskTitle)
+            }
+            
+            val requestCode = getStableRequestCode(taskId)
+            val pendingIntent = PendingIntent.getBroadcast(this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+
+            val calendar = Calendar.getInstance().apply {
                 val dateParts = selectedDate.split("-")
                 val timeParts = selectedTime.split(":")
                 set(Calendar.YEAR, dateParts[0].toInt())
@@ -212,14 +223,9 @@ class AddTaskActivity : AppCompatActivity() {
                 set(Calendar.HOUR_OF_DAY, timeParts[0].toInt())
                 set(Calendar.MINUTE, timeParts[1].toInt())
                 set(Calendar.SECOND, 0)
-            } catch (e: Exception) {
-                Toast.makeText(this@AddTaskActivity, "Format tanggal atau waktu salah", Toast.LENGTH_SHORT).show()
-                return
             }
-        }
 
-        if (calendar.timeInMillis > System.currentTimeMillis()) {
-            try {
+            if (calendar.timeInMillis > System.currentTimeMillis()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     if (alarmManager.canScheduleExactAlarms()) {
                         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
@@ -229,20 +235,27 @@ class AddTaskActivity : AppCompatActivity() {
                 } else {
                     alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
                 }
-            } catch (e: SecurityException) {
-                 Toast.makeText(this, "Gagal menjadwalkan alarm: ${e.message}", Toast.LENGTH_LONG).show()
-            }
-        } 
+            } 
+        } catch (e: Exception) {
+            Log.e("AddTaskActivity", "Error scheduling alarm", e)
+            Toast.makeText(this, "Gagal menjadwalkan alarm: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun cancelAlarm(taskId: String) {
-       val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(this, AlarmReceiver::class.java)
-        val requestCode = taskId.hashCode()
-        val pendingIntent = PendingIntent.getBroadcast(this, requestCode, intent, PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE)
-        if (pendingIntent != null) {
-            alarmManager.cancel(pendingIntent)
-        }
+       try {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(this, AlarmReceiver::class.java)
+            val requestCode = getStableRequestCode(taskId)
+            val pendingIntent = PendingIntent.getBroadcast(this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+            if (pendingIntent != null) {
+                alarmManager.cancel(pendingIntent)
+                pendingIntent.cancel()
+            }
+       } catch (e: Exception) {
+            Log.e("AddTaskActivity", "Error canceling alarm", e)
+            Toast.makeText(this, "Gagal membatalkan alarm: ${e.message}", Toast.LENGTH_LONG).show()
+       }
     }
 
     private fun showDeleteConfirmationDialog() { 
@@ -265,8 +278,7 @@ class AddTaskActivity : AppCompatActivity() {
             database.child(taskId!!).removeValue()
                 .addOnSuccessListener {
                     Toast.makeText(this, "Task Deleted!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, ScheduleActivity::class.java))
-                    finishAffinity()
+                    finish() // Cukup finish, tidak perlu ke home
                 }
         }
     }

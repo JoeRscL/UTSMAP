@@ -8,8 +8,7 @@
     android:gravity="center"
     android:elevation="8dp"
     android:paddingLeft="20dp"
-    android:paddingRight="20dp"
-    >
+    android:paddingRight="20dp">
 
     <!-- HOME -->
     <LinearLayout
@@ -41,7 +40,7 @@
             android:tint="#FFFFFF"/>
     </LinearLayout>
 
-    <!-- ADD BUTTON (Oval Gradient) -->
+    <!-- ADD BUTTON -->
     <LinearLayout
         android:id="@+id/navAdd"
         android:layout_width="65dp"
@@ -58,10 +57,9 @@
             android:tint="#FFFFFF" />
     </LinearLayout>
 
-
-    <!-- SETTINGS -->
+    <!-- PROFILE (was Settings) -->
     <LinearLayout
-        android:id="@+id/navSettings"
+        android:id="@+id/navProfile"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -70,7 +68,7 @@
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_settings"
+            android:src="@drawable/ic_person" 
             android:tint="#FFFFFF"/>
     </LinearLayout>
 
