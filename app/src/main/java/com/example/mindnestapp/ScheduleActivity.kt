@@ -22,7 +22,7 @@ import java.util.*
 
 class ScheduleActivity : AppCompatActivity() {
 
-    // MODEL DATA
+    // ... (property lainnya tetap sama)
     data class Schedule(
         var id: String? = null,
         val title: String = "",
@@ -49,29 +49,21 @@ class ScheduleActivity : AppCompatActivity() {
         binding = ActivityScheduleBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 1. Inisialisasi Firebase
         auth = FirebaseAuth.getInstance()
         val currentUser = auth.currentUser
         if (currentUser == null) {
-            Toast.makeText(this, "User tidak terautentikasi.", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
         database = FirebaseDatabase.getInstance().getReference("schedules").child(currentUser.uid)
 
-        // 2. Setup Helper & UI
         footerHelper = FooterNavHelper(this)
-        
-        // Default selected date = Today
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         selectedDate = sdf.format(Date())
 
-        setupHeader()
+        // Panggil method yang tidak perlu di-refresh di sini
         setupWeeklyCalendar()
-
-        // 3. Load Data
         loadSchedules()
-
         footerHelper.setupFooterNavigation()
 
         binding.ivProfileSmall.setOnClickListener {
@@ -79,9 +71,14 @@ class ScheduleActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Panggil setupHeader() di sini agar selalu refresh saat kembali ke halaman ini
+        setupHeader()
+    }
+
     private fun setupHeader() {
         val headerFormat = SimpleDateFormat("EEEE d MMMM yyyy", Locale.getDefault())
-        // Tampilkan tanggal yang dipilih di header, bukan selalu hari ini
         try {
             val dateObj = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(selectedDate)
             binding.tvDate.text = headerFormat.format(dateObj ?: Date())
@@ -94,8 +91,13 @@ class ScheduleActivity : AppCompatActivity() {
             FirebaseDatabase.getInstance().getReference("users").child(user.uid)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-                        val name = snapshot.child("firstName").getValue(String::class.java)
-                        val displayName = name.takeIf { !it.isNullOrEmpty() } ?: "User"
+                        val firstName = snapshot.child("firstName").getValue(String::class.java)
+                        val lastName = snapshot.child("lastName").getValue(String::class.java) ?: ""
+                        val displayName = if (!firstName.isNullOrBlank()) {
+                            "$firstName $lastName".trim()
+                        } else {
+                            "User"
+                        }
                         binding.tvUserName.text = "Hi, $displayName"
                     }
                     override fun onCancelled(error: DatabaseError) {
@@ -105,12 +107,11 @@ class ScheduleActivity : AppCompatActivity() {
         }
     }
 
-    // --- LOGIKA UTAMA: MEMUAT JADWAL ---
+    // ... (Sisa fungsi lainnya: loadSchedules, displaySchedulesForDate, setupWeeklyCalendar, dll, tetap sama)
     private fun loadSchedules() {
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                allSchedules.clear() // Reset local list
-
+                allSchedules.clear()
                 if (snapshot.exists()) {
                     for (child in snapshot.children) {
                         val schedule = child.getValue(Schedule::class.java)
@@ -120,7 +121,6 @@ class ScheduleActivity : AppCompatActivity() {
                         }
                     }
                 }
-                // Filter dan tampilkan berdasarkan tanggal yang dipilih
                 displaySchedulesForDate(selectedDate)
             }
 
@@ -130,41 +130,34 @@ class ScheduleActivity : AppCompatActivity() {
         })
     }
 
-    // Fungsi baru untuk memfilter tampilan
     private fun displaySchedulesForDate(dateStr: String) {
         binding.scheduleContainer.removeAllViews()
 
-        val filteredSchedules = allSchedules.filter { 
-            it.date == dateStr && !it.isCompleted 
-        }
+        val filteredSchedules = allSchedules.filter { it.date == dateStr && !it.isCompleted }
 
         if (filteredSchedules.isNotEmpty()) {
             for (schedule in filteredSchedules) {
                 val view = layoutInflater.inflate(R.layout.item_schedule_home, binding.scheduleContainer, false)
 
-                // Binding ID dari XML item
                 val tvTitle = view.findViewById<TextView>(R.id.tvTitle)
                 val ivPriority = view.findViewById<ImageView>(R.id.ivPriority)
                 val ivCategory = view.findViewById<ImageView>(R.id.ivCategory)
                 val tvTime = view.findViewById<TextView>(R.id.tvTime)
                 val container = view as LinearLayout
 
-                // Tampilkan Data ke Layar
                 tvTitle.text = schedule.title
                 tvTime.text = schedule.time
 
-                // Set Category Icon
                 val categoryIcon = when (schedule.category.lowercase(Locale.getDefault())) {
                     "work", "pekerjaan", "kantor" -> R.drawable.ic_work
                     "gym", "olahraga", "workout", "sehat" -> R.drawable.ic_gym
                     "doctor", "dokter", "health", "kesehatan", "medis" -> R.drawable.ic_doctor
                     "study", "belajar", "kuliah", "sekolah" -> R.drawable.ic_file
                     "home", "rumah", "keluarga" -> R.drawable.ic_home
-                    else -> R.drawable.ic_calendar // Default icon
+                    else -> R.drawable.ic_calendar
                 }
                 ivCategory.setImageResource(categoryIcon)
 
-                // Set Priority Colors and Icon
                 val bgDrawable = ContextCompat.getDrawable(this@ScheduleActivity, R.drawable.bg_card)?.mutate() as? GradientDrawable
                 
                 when (schedule.priority.lowercase(Locale.getDefault())) {
@@ -187,7 +180,6 @@ class ScheduleActivity : AppCompatActivity() {
                 }
                 container.background = bgDrawable
 
-                // Add Click Listener to Edit
                 view.setOnClickListener {
                     val intent = Intent(this@ScheduleActivity, AddTaskActivity::class.java)
                     intent.putExtra("taskId", schedule.id)
@@ -201,11 +193,9 @@ class ScheduleActivity : AppCompatActivity() {
                     startActivity(intent)
                 }
 
-                // Masukkan kartu ke dalam container
                 binding.scheduleContainer.addView(view)
             }
         } else {
-            // Tampilkan pesan kosong jika tidak ada jadwal di tanggal ini
              val emptyView = layoutInflater.inflate(R.layout.item_no_schedule, binding.scheduleContainer, false)
              binding.scheduleContainer.addView(emptyView)
         }
@@ -221,13 +211,12 @@ class ScheduleActivity : AppCompatActivity() {
         val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
         val tempCal = Calendar.getInstance()
-        tempCal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY) // Start week from Sunday
+        tempCal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
         
         val todayCal = Calendar.getInstance()
         val todayStr = fullDateFormat.format(todayCal.time)
         
-        // Cari index hari ini (0-6)
-        selectedIndex = -1 // Reset
+        selectedIndex = -1
         
         binding.dayContainer.removeAllViews()
 
@@ -236,7 +225,6 @@ class ScheduleActivity : AppCompatActivity() {
             calendarDates.add(currentDate)
             val currentDateStr = fullDateFormat.format(currentDate)
             
-            // Set initial selected index to today if matches
             if (currentDateStr == todayStr && selectedIndex == -1) {
                 selectedIndex = i
             }
@@ -250,8 +238,6 @@ class ScheduleActivity : AppCompatActivity() {
             circle.layoutParams = LinearLayout.LayoutParams(50.dp, 80.dp)
             circle.orientation = LinearLayout.VERTICAL
             circle.gravity = Gravity.CENTER
-            
-            // Initial styling will be updated in updateDaySelection()
             
             val tvDay = TextView(this)
             tvDay.text = dayInitials[i]
@@ -278,28 +264,23 @@ class ScheduleActivity : AppCompatActivity() {
             binding.dayContainer.addView(dayWrapper)
             dayCircles.add(circle)
             
-            // Click Listener untuk Ganti Tanggal
             val index = i
             circle.setOnClickListener {
                 selectedIndex = index
                 val newDate = calendarDates[index]
                 selectedDate = fullDateFormat.format(newDate)
                 
-                // Update UI Header Tanggal
                 val headerFormat = SimpleDateFormat("EEEE d MMMM yyyy", Locale.getDefault())
                 binding.tvDate.text = headerFormat.format(newDate)
                 
-                // Update UI Calendar Selection
                 updateDaySelection()
                 
-                // Filter List Jadwal
                 displaySchedulesForDate(selectedDate)
             }
 
             tempCal.add(Calendar.DAY_OF_MONTH, 1)
         }
         
-        // Jika hari ini tidak ada dalam rentang minggu ini (kasus jarang jika logic benar), default ke index 0
         if (selectedIndex == -1) selectedIndex = 0
         
         updateDaySelection()
@@ -312,12 +293,10 @@ class ScheduleActivity : AppCompatActivity() {
             val tvDate = circle.getChildAt(1) as TextView
             
             if (i == selectedIndex) {
-                // Selected Style
                 circle.setBackgroundResource(R.drawable.bg_day_pill_selected)
                 tvDay.setTextColor(Color.WHITE)
                 tvDate.setTextColor(Color.WHITE)
             } else {
-                // Unselected Style
                 circle.setBackgroundResource(R.drawable.bg_day_pill_unselected)
                 tvDay.setTextColor("#8E8E93".toColorInt())
                 tvDate.setTextColor("#8E8E93".toColorInt())
