@@ -37,9 +37,30 @@ android {
         jvmTarget = "1.8"
     }
 
+    aaptOptions {
+        noCompress += "tflite"
+        noCompress += "lite"
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
+    configurations {
+        all {
+            exclude(group = "com.google.ai.edge.litert", module = "litert")
+            exclude(group = "com.google.ai.edge.litert", module = "litert-api")
+            exclude(group = "com.google.ai.edge.litert", module = "litert-support")
+            exclude(group = "com.google.ai.edge.litert", module = "litert-support-api")
+        }
+    }
+
     buildFeatures {
         compose = true
         viewBinding = true
+        mlModelBinding = true
     }
 
     composeOptions {
@@ -48,44 +69,36 @@ android {
 }
 
 dependencies {
-    // Core Android
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("com.google.firebase:firebase-storage-ktx")
 
-    // Lifecycle & Activity
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-database-ktx")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-ktx:1.9.0")
     implementation("androidx.activity:activity-compose:1.9.0")
 
-    // Firebase (BOM + KTX)
-    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
-    implementation("com.google.firebase:firebase-auth-ktx")
-    implementation("com.google.firebase:firebase-analytics-ktx")
-    implementation("com.google.firebase:firebase-database-ktx")
-
-    // Google Sign-In
-    implementation("com.google.android.gms:play-services-auth:21.0.0")
-
-    // Compose
     implementation(platform("androidx.compose:compose-bom:2024.04.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
 
-    // Kalender, Image, etc
     implementation("com.github.prolificinteractive:material-calendarview:1.6.0")
     implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation("com.github.bumptech.glide:glide:4.12.0")
-
-    // Country Code Picker
     implementation("com.hbb20:ccp:2.5.1")
 
-    // Testing
+    implementation("org.tensorflow:tensorflow-lite-task-text:0.4.4")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

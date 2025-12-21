@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
-    <!-- Latar Belakang Biru Atas (Sekitar 35% tinggi layar) -->
     <View
         android:id="@+id/blueBackground"
         android:layout_width="match_parent"
@@ -17,7 +16,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Kartu Register Utama -->
     <androidx.cardview.widget.CardView
         android:id="@+id/registerCard"
         android:layout_width="match_parent"
@@ -37,7 +35,6 @@
             android:paddingTop="60dp"
             android:paddingBottom="40dp"
             android:paddingHorizontal="24dp">
-            <!-- PaddingTop 60dp untuk memberi ruang bagi logo yang menjorok ke dalam -->
 
             <TextView
                 android:layout_width="wrap_content"
@@ -48,7 +45,84 @@
                 android:textStyle="bold"
                 android:layout_marginBottom="24dp"/>
 
-            <!-- Email Input -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:background="@drawable/bg_edittext_outline"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/email_logo"
+                        app:tint="#000000"/>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="24dp"
+                        android:background="#CCCCCC"
+                        android:layout_marginHorizontal="8dp"/>
+
+                    <EditText
+                        android:id="@+id/etFirstName"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@null"
+                        android:hint="First Name"
+                        android:textSize="14sp"
+                        android:inputType="textPersonName"
+                        android:textColor="#000000"
+                        android:textColorHint="#999999"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:background="@drawable/bg_edittext_outline"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/email_logo"
+                        app:tint="#000000"/>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="24dp"
+                        android:background="#CCCCCC"
+                        android:layout_marginHorizontal="8dp"/>
+
+                    <EditText
+                        android:id="@+id/etLastName"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@null"
+                        android:hint="Last Name"
+                        android:textSize="14sp"
+                        android:inputType="textPersonName"
+                        android:textColor="#000000"
+                        android:textColorHint="#999999"/>
+                </LinearLayout>
+            </LinearLayout>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -88,7 +162,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- New Password Input -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -128,7 +201,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Confirm Password Input -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -168,7 +240,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Register Button -->
             <Button
                 android:id="@+id/btnDaftar"
                 android:layout_width="match_parent"
@@ -183,7 +254,6 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Logo Container (Floating above Card) -->
     <androidx.cardview.widget.CardView
         android:layout_width="100dp"
         android:layout_height="100dp"
@@ -202,35 +272,34 @@
             android:padding="16dp"/>
     </androidx.cardview.widget.CardView>
 
-    <!-- Login Navigation Button -->
-    <LinearLayout
-        android:id="@+id/tvLogin"
-        android:layout_width="200dp"
-        android:layout_height="50dp"
-        android:background="@drawable/bg_register_pill"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:layout_marginBottom="40dp"
-        android:clickable="true"
-        android:focusable="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+<!--    <LinearLayout-->
+<!--        android:id="@+id/tvLogin"-->
+<!--        android:layout_width="200dp"-->
+<!--        android:layout_height="50dp"-->
+<!--        android:background="@drawable/bg_register_pill"-->
+<!--        android:gravity="center"-->
+<!--        android:orientation="horizontal"-->
+<!--        android:layout_marginBottom="40dp"-->
+<!--        android:clickable="true"-->
+<!--        android:focusable="true"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent">-->
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Login"
-            android:textColor="#000000"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginEnd="16dp"/>
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Login"-->
+<!--            android:textColor="#000000"-->
+<!--            android:textSize="18sp"-->
+<!--            android:textStyle="bold"-->
+<!--            android:layout_marginEnd="16dp"/>-->
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_arrow_right_circle"
-            app:tint="#0D2C6B"/>
-    </LinearLayout>
+<!--        <ImageView-->
+<!--            android:layout_width="24dp"-->
+<!--            android:layout_height="24dp"-->
+<!--            android:src="@drawable/ic_arrow_right_circle"-->
+<!--            app:tint="#0D2C6B"/>-->
+<!--    </LinearLayout>-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

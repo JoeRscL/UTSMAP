@@ -24,12 +24,20 @@ class register : AppCompatActivity() {
 
         // Tombol Daftar
         binding.btnDaftar.setOnClickListener {
+            // 1. AMBIL INPUT DATA BARU
+            val firstName = binding.etFirstName.text.toString().trim()
+            val lastName = binding.etLastName.text.toString().trim()
             val email = binding.etEmail.text.toString().trim()
-            // etNama dihapus karena tidak ada di desain UI baru
             val password = binding.etPassword.text.toString().trim()
             val confirmPassword = binding.etConfirmPassword.text.toString().trim()
 
-            // Validasi input
+            // 2. VALIDASI INPUT
+            // Pastikan nama depan dan belakang diisi
+            if (firstName.isEmpty() || lastName.isEmpty()) {
+                Toast.makeText(this, "Silakan isi Nama Depan dan Belakang", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             if (email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
                 Toast.makeText(this, "Silakan isi semua field", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -52,12 +60,18 @@ class register : AppCompatActivity() {
                         val userId = auth.currentUser?.uid
 
                         if (userId != null) {
-                            // Simpan data user ke Realtime Database
+                            // 3. SIMPAN STRUKTUR DATA LENGKAP KE REALTIME DATABASE
+                            // Kita simpan field kosong untuk data lain agar di ProfileActivity tidak null
                             val userProfile = hashMapOf(
                                 "userId" to userId,
                                 "email" to email,
+                                "firstName" to firstName,  // Data baru
+                                "lastName" to lastName,    // Data baru
+                                "phoneNumber" to "",       // Default kosong
+                                "gender" to "",           // Default kosong
+                                "dateOfBirth" to "",      // Default kosong
+                                "profileImageBase64" to "", // Default kosong
                                 "createdAt" to System.currentTimeMillis()
-                                // Nama bisa diisi user nanti di halaman Profile
                             )
 
                             database.reference.child("users").child(userId)
@@ -77,7 +91,7 @@ class register : AppCompatActivity() {
                                 .addOnFailureListener { e ->
                                     Toast.makeText(
                                         this,
-                                        "Gagal menyimpan data: ${e.message}",
+                                        "Gagal menyimpan data profile: ${e.message}",
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
@@ -93,9 +107,9 @@ class register : AppCompatActivity() {
         }
 
         // Tombol Login (langsung ke halaman login)
-        binding.tvLogin.setOnClickListener {
-            startActivity(Intent(this, login::class.java))
-            finish()
-        }
+//        binding.tvLogin.setOnClickListener {
+//            startActivity(Intent(this, login::class.java))
+//            finish()
+//        }
     }
 }

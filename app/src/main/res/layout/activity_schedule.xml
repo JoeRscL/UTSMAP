@@ -3,12 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    android:background="?attr/backgroundColor"
+    android:background="#FFFFFF"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ScheduleActivity">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -19,8 +18,8 @@
 
         <TextView
             android:id="@+id/tvDate"
-            tools:text="Saturday 2 October 2024"
-            android:textColor="?attr/colorPrimary"
+            tools:text="Senin, 2 Oktober 2025"
+            android:textColor="#0D47A1"
             android:textSize="14sp"
             android:layout_weight="1"
             android:layout_width="0dp"
@@ -31,10 +30,9 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_settings"
-            app:tint="?attr/colorPrimary"/>
+            app:tint="#0D47A1"/>
     </LinearLayout>
 
-    <!-- Welcome Message -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -47,32 +45,77 @@
             android:text="Welcome Back!"
             android:textStyle="bold"
             android:textSize="28sp"
-            android:textColor="?attr/colorPrimary"
+            android:textColor="#0D47A1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <TextView
             android:id="@+id/tvUserName"
-            tools:text="Hi, Choudary Aoun"
+            tools:text="Hi, User"
             android:textSize="18sp"
-            android:textColor="?attr/textColorPrimary"
+            android:textColor="#757575"
             android:layout_marginTop="4dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
-
     </LinearLayout>
 
-    <!-- Kalender Mingguan -->
     <LinearLayout
-        android:id="@+id/dayContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
+        android:gravity="center_vertical"
         android:layout_marginBottom="16dp"
-        android:weightSum="7"/>
+        android:paddingHorizontal="16dp">
 
-    <!-- Schedule Container -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            android:layout_marginEnd="8dp">
+
+            <ImageView
+                android:id="@+id/btnPrevWeek"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_arrow_left"
+                android:padding="10dp"
+                app:tint="#0D47A1"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground"/>
+        </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:id="@+id/dayContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:weightSum="7"/>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            android:layout_marginStart="8dp">
+
+            <ImageView
+                android:id="@+id/btnNextWeek"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_arrow_right"
+                android:padding="10dp"
+                app:tint="#0D47A1"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground"/>
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -80,18 +123,52 @@
         android:paddingHorizontal="16dp">
 
         <LinearLayout
-            android:id="@+id/scheduleContainer"
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingBottom="16dp">
+
+            <LinearLayout
+                android:id="@+id/llActiveSchedule"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/tvFinishedHeader"
+                android:text="Selesai"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#8E8E93"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <LinearLayout
+                android:id="@+id/llFinishedSchedule"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/tvEmptyState"
+                android:text="Tidak ada jadwal hari ini"
+                android:gravity="center"
+                android:layout_marginTop="32dp"
+                android:textColor="#BDBDBD"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
         </LinearLayout>
     </ScrollView>
 
-    <!-- Footer Navigation -->
     <include
         android:id="@+id/footerNav"
         layout="@layout/layout_footer_nav"
         android:layout_width="match_parent"
         android:layout_height="70dp" />
+
 </LinearLayout>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="#FFFFFF">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            tools:text="Menyelesaikan Laporan Skripsi"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#000000"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/iconDate"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginTop="12dp"
+            android:src="@android:drawable/ic_menu_my_calendar"
+            app:tint="#8E8E93"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+
+        <TextView
+            android:id="@+id/tvDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="2023-12-25"
+            android:textSize="14sp"
+            android:textColor="#8E8E93"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@id/iconDate"
+            app:layout_constraintTop_toTopOf="@id/iconDate"
+            app:layout_constraintBottom_toBottomOf="@id/iconDate" />
+
+        <ImageView
+            android:id="@+id/iconTime"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@android:drawable/ic_menu_recent_history"
+            app:tint="#007AFF"
+            android:layout_marginStart="16dp"
+            app:layout_constraintStart_toEndOf="@id/tvDate"
+            app:layout_constraintTop_toTopOf="@id/iconDate" />
+
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="14:00"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#007AFF"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@id/iconTime"
+            app:layout_constraintTop_toTopOf="@id/iconTime"
+            app:layout_constraintBottom_toBottomOf="@id/iconTime" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>

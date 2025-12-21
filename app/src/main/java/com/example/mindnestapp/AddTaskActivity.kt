@@ -1,6 +1,5 @@
 package com.example.mindnestapp
 
-import android.Manifest
 import android.app.AlarmManager
 import android.app.AlertDialog
 import android.app.DatePickerDialog
@@ -8,16 +7,14 @@ import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Color
-import android.os.Build
+import android.graphics.Paint
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import com.example.mindnestapp.databinding.ActivityAddTaskBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -25,9 +22,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
 import kotlin.math.abs
 
 class AddTaskActivity : AppCompatActivity() {
@@ -42,6 +37,7 @@ class AddTaskActivity : AppCompatActivity() {
     private var selectedCategory: String = ""
     private var selectedLevel: String = ""
 
+    private var isTaskCompleted: Boolean = false
     private var isEditMode = false
     private var taskId: String? = null
 
@@ -49,9 +45,9 @@ class AddTaskActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            Toast.makeText(this, "Izin notifikasi diberikan. Silakan simpan tugas lagi.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Izin notifikasi diberikan.", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(this, "Pengingat tidak akan berfungsi tanpa izin notifikasi.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Pengingat tidak berfungsi tanpa izin.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -63,7 +59,6 @@ class AddTaskActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         val currentUser = auth.currentUser
         if (currentUser == null) {
-            Toast.makeText(this, "User tidak terautentikasi.", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -84,71 +79,105 @@ class AddTaskActivity : AppCompatActivity() {
             binding.tvHeaderTitle.text = "Edit Task"
             binding.fabSave.setImageResource(R.drawable.ic_check_white)
             binding.fabDelete.visibility = View.VISIBLE
+            binding.btnMarkDone.visibility = View.VISIBLE
 
             if (taskId != null) {
                 database.child(taskId!!).addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         if (snapshot.exists()) populateFormFromSnapshot(snapshot)
                     }
-                    override fun onCancelled(error: DatabaseError) { 
-                        Toast.makeText(this@AddTaskActivity, "Gagal memuat data.", Toast.LENGTH_SHORT).show()
-                    }
+                    override fun onCancelled(error: DatabaseError) {}
                 })
             }
         }
     }
-    
+
     private fun populateFormFromSnapshot(snapshot: DataSnapshot) {
-        val task = snapshot.getValue(ScheduleActivity.Schedule::class.java)
-        task?.let {
-            binding.etTaskTitle.setText(it.title)
-            binding.etNotes.setText(it.description)
+        val title = snapshot.child("title").getValue(String::class.java) ?: ""
+        val description = snapshot.child("description").getValue(String::class.java) ?: ""
+        val category = snapshot.child("category").getValue(String::class.java) ?: ""
+        val priority = snapshot.child("priority").getValue(String::class.java) ?: ""
+        val date = snapshot.child("date").getValue(String::class.java) ?: ""
+        val time = snapshot.child("time").getValue(String::class.java) ?: ""
+        val reminderEnabled = snapshot.child("reminderEnabled").getValue(Boolean::class.java) ?: false
+        isTaskCompleted = snapshot.child("isCompleted").getValue(Boolean::class.java) ?: false
 
-            selectedCategory = it.category
-            if (selectedCategory.isNotEmpty()) {
-                binding.tvCategorySelect.text = selectedCategory
-                binding.tvCategorySelect.setTextColor(Color.BLACK)
-            } else {
-                 binding.tvCategorySelect.text = "Please select category"
-                 binding.tvCategorySelect.setTextColor(Color.parseColor("#8E8E93"))
-            }
-            binding.etCategory.setText(selectedCategory)
+        binding.etTaskTitle.setText(title)
+        binding.etNotes.setText(description)
 
-            selectedLevel = it.priority
-            if (selectedLevel.isNotEmpty()) {
-                binding.tvLevelSelect.text = selectedLevel
-                binding.tvLevelSelect.setTextColor(Color.BLACK)
-            } else {
-                binding.tvLevelSelect.text = "Select urgency level"
-                binding.tvLevelSelect.setTextColor(Color.parseColor("#8E8E93"))
-            }
+        selectedCategory = category
+        binding.tvCategorySelect.text = if (category.isNotEmpty()) category else "Select Category"
+        binding.etCategory.setText(selectedCategory)
 
-            selectedDate = it.date
-            if (selectedDate.isNotEmpty()) {
-                binding.tvSetDate.text = selectedDate
-                binding.tvSetDate.setTextColor(Color.BLACK)
-            }
+        selectedLevel = priority
+        binding.tvLevelSelect.text = if (priority.isNotEmpty()) priority else "Select Level"
 
-            selectedTime = it.time
-            if (selectedTime.isNotEmpty()) {
-                binding.tvSetTime.text = selectedTime
-                binding.tvSetTime.setTextColor(Color.BLACK)
-            }
+        selectedDate = date
+        binding.tvSetDate.text = if (date.isNotEmpty()) date else "Set Date"
 
-            binding.switchReminder.isChecked = snapshot.child("reminderEnabled").getValue(Boolean::class.java) ?: false
+        selectedTime = time
+        binding.tvSetTime.text = if (time.isNotEmpty()) time else "Set Time"
+
+        binding.switchReminder.isChecked = reminderEnabled
+
+        updateDoneButtonState()
+    }
+
+    private fun updateDoneButtonState() {
+        if (isTaskCompleted) {
+            binding.btnMarkDone.backgroundTintList = ColorStateList.valueOf(Color.GRAY)
+            binding.etTaskTitle.paintFlags = binding.etTaskTitle.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+            setFormEditable(false)
+        } else {
+            binding.btnMarkDone.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#34C759"))
+            binding.etTaskTitle.paintFlags = binding.etTaskTitle.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+            setFormEditable(true)
         }
+    }
+
+    private fun setFormEditable(isEditable: Boolean) {
+        binding.etTaskTitle.isEnabled = isEditable
+        binding.etNotes.isEnabled = isEditable
+        binding.etCategory.isEnabled = isEditable
+        binding.layoutSetDate.isEnabled = isEditable
+        binding.layoutSetDate.isClickable = isEditable
+        binding.layoutSetTime.isEnabled = isEditable
+        binding.layoutSetTime.isClickable = isEditable
+        binding.tvCategorySelect.isEnabled = isEditable
+        binding.tvCategorySelect.isClickable = isEditable
+        binding.tvLevelSelect.isEnabled = isEditable
+        binding.tvLevelSelect.isClickable = isEditable
+        binding.switchReminder.isEnabled = isEditable
+
+        if (isEditable) binding.fabSave.show() else binding.fabSave.hide()
     }
 
     private fun setupClickListeners() {
         binding.fabSave.setOnClickListener { saveTaskToFirebase() }
         binding.fabDelete.setOnClickListener { showDeleteConfirmationDialog() }
         binding.btnCancel.setOnClickListener { finish() }
+        binding.btnMarkDone.setOnClickListener { toggleTaskCompletion() }
+
         binding.tvCategorySelect.setOnClickListener { showCategorySelectionDialog() }
         binding.tvLevelSelect.setOnClickListener { showLevelSelectionDialog() }
         binding.layoutSetDate.setOnClickListener { showDatePickerDialog() }
         binding.layoutSetTime.setOnClickListener { showTimePickerDialog() }
     }
 
+    private fun toggleTaskCompletion() {
+        if (taskId == null) return
+        isTaskCompleted = !isTaskCompleted
+
+        database.child(taskId!!).child("isCompleted").setValue(isTaskCompleted)
+            .addOnSuccessListener {
+                val msg = if (isTaskCompleted) "Tugas Selesai! 🎉" else "Tugas Dibuka Kembali"
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                if (isTaskCompleted) cancelAlarm(taskId!!)
+                updateDoneButtonState()
+            }
+    }
+
+    // === BAGIAN UTAMA YANG DIUBAH ADA DI SINI ===
     private fun saveTaskToFirebase() {
         try {
             val title = binding.etTaskTitle.text.toString().trim()
@@ -159,13 +188,6 @@ class AddTaskActivity : AppCompatActivity() {
                 return
             }
 
-            if (isReminderOn && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    return
-                }
-            }
-
             val taskData = mapOf(
                 "title" to title,
                 "description" to binding.etNotes.text.toString().trim(),
@@ -173,175 +195,101 @@ class AddTaskActivity : AppCompatActivity() {
                 "priority" to (if (selectedLevel.isEmpty()) "Medium" else selectedLevel),
                 "date" to selectedDate,
                 "time" to selectedTime,
-                "isCompleted" to false,
+                "isCompleted" to isTaskCompleted,
                 "reminderEnabled" to isReminderOn
             )
-            
+
             val finalTaskId = if (isEditMode) taskId!! else database.push().key!!
 
             database.child(finalTaskId).setValue(taskData).addOnSuccessListener {
-                if (isReminderOn) {
+                // Atur Alarm
+                if (isReminderOn && !isTaskCompleted) {
                     scheduleAlarm(finalTaskId, title)
                 } else {
-                    if(isEditMode) cancelAlarm(finalTaskId)
+                    cancelAlarm(finalTaskId)
                 }
-                Toast.makeText(this, if (isEditMode) "Task Updated!" else "Task Saved!", Toast.LENGTH_SHORT).show()
-                
-                // **PERBAIKAN KRUSIAL**: Mengganti finishAffinity() dengan finish()
-                finish() 
 
-            }.addOnFailureListener { 
-                Toast.makeText(this, "Gagal menyimpan: ${it.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Task Saved!", Toast.LENGTH_SHORT).show()
+
+                // === PERUBAHAN: Kembali ke ScheduleActivity (Home) & Refresh ===
+                val intent = Intent(this, ScheduleActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                finish() // Tutup activity AddTask
+                // ==============================================================
             }
         } catch (e: Exception) {
-            Log.e("AddTaskActivity", "Error in saveTaskToFirebase", e)
-            Toast.makeText(this, "Terjadi error: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
-    private fun getStableRequestCode(taskId: String): Int {
-        return abs(taskId.takeLast(6).hashCode())
-    }
+    private fun getStableRequestCode(taskId: String): Int = abs(taskId.takeLast(6).hashCode())
 
     private fun scheduleAlarm(taskId: String, taskTitle: String) {
-        try {
-            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val intent = Intent(this, AlarmReceiver::class.java).apply {
-                putExtra("TASK_ID", taskId)
-                putExtra("TASK_TITLE", taskTitle)
-            }
-            
-            val requestCode = getStableRequestCode(taskId)
-            val pendingIntent = PendingIntent.getBroadcast(this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, AlarmReceiver::class.java).apply {
+            putExtra("TASK_ID", taskId)
+            putExtra("TASK_TITLE", taskTitle)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(this, getStableRequestCode(taskId), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
 
-            val calendar = Calendar.getInstance().apply {
-                val dateParts = selectedDate.split("-")
-                val timeParts = selectedTime.split(":")
-                set(Calendar.YEAR, dateParts[0].toInt())
-                set(Calendar.MONTH, dateParts[1].toInt() - 1)
-                set(Calendar.DAY_OF_MONTH, dateParts[2].toInt())
-                set(Calendar.HOUR_OF_DAY, timeParts[0].toInt())
-                set(Calendar.MINUTE, timeParts[1].toInt())
-                set(Calendar.SECOND, 0)
-            }
+        val cal = Calendar.getInstance()
+        val d = selectedDate.split("-"); val t = selectedTime.split(":")
+        cal.set(d[0].toInt(), d[1].toInt()-1, d[2].toInt(), t[0].toInt(), t[1].toInt(), 0)
 
-            if (calendar.timeInMillis > System.currentTimeMillis()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    if (alarmManager.canScheduleExactAlarms()) {
-                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
-                    } else {
-                        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
-                    }
-                } else {
-                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
-                }
-            } 
-        } catch (e: Exception) {
-            Log.e("AddTaskActivity", "Error scheduling alarm", e)
-            Toast.makeText(this, "Gagal menjadwalkan alarm: ${e.message}", Toast.LENGTH_LONG).show()
+        if(cal.timeInMillis > System.currentTimeMillis()) {
+            try { alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent) }
+            catch (e: SecurityException) { /* Handle permission */ }
         }
     }
 
     private fun cancelAlarm(taskId: String) {
-       try {
-            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val intent = Intent(this, AlarmReceiver::class.java)
-            val requestCode = getStableRequestCode(taskId)
-            val pendingIntent = PendingIntent.getBroadcast(this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
-            if (pendingIntent != null) {
-                alarmManager.cancel(pendingIntent)
-                pendingIntent.cancel()
-            }
-       } catch (e: Exception) {
-            Log.e("AddTaskActivity", "Error canceling alarm", e)
-            Toast.makeText(this, "Gagal membatalkan alarm: ${e.message}", Toast.LENGTH_LONG).show()
-       }
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(this, getStableRequestCode(taskId), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+        alarmManager.cancel(pendingIntent)
     }
 
-    private fun showDeleteConfirmationDialog() { 
-        AlertDialog.Builder(this)
-            .setTitle("Delete Task")
-            .setMessage("Are you sure you want to delete this task?")
-            .setPositiveButton("Delete") { dialog, _ ->
-                taskId?.let { cancelAlarm(it) }
-                deleteTask()
-                dialog.dismiss()
-            }
-            .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .show()
-    }
-    
-    private fun deleteTask() {
-        if (taskId != null) {
-            database.child(taskId!!).removeValue()
-                .addOnSuccessListener {
-                    Toast.makeText(this, "Task Deleted!", Toast.LENGTH_SHORT).show()
-                    finish() // Cukup finish, tidak perlu ke home
-                }
-        }
+    private fun showDeleteConfirmationDialog() {
+        AlertDialog.Builder(this).setTitle("Delete").setMessage("Are you sure?")
+            .setPositiveButton("Yes") { _, _ ->
+                taskId?.let { cancelAlarm(it); database.child(it).removeValue() }
+
+                // === Tambahkan navigasi ke Home saat hapus juga ===
+                val intent = Intent(this, ScheduleActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                finish()
+            }.setNegativeButton("No", null).show()
     }
 
     private fun showCategorySelectionDialog() {
-        val categories = arrayOf("Work", "Gym", "Doctor", "Study", "Home", "Other")
-        AlertDialog.Builder(this)
-            .setTitle("Select Category")
-            .setItems(categories) { dialog, which ->
-                selectedCategory = categories[which]
-                binding.tvCategorySelect.text = selectedCategory
-                binding.tvCategorySelect.setTextColor(Color.BLACK)
-                binding.etCategory.setText(selectedCategory)
-                dialog.dismiss()
-            }
-            .show()
+        val cats = arrayOf("Work", "Sport", "Doctor", "Study", "Home", "Other")
+        AlertDialog.Builder(this).setItems(cats) { _, w ->
+            selectedCategory = cats[w]; binding.tvCategorySelect.text = selectedCategory
+        }.show()
     }
 
     private fun showLevelSelectionDialog() {
-        val levels = arrayOf("High", "Medium", "Low")
-        AlertDialog.Builder(this)
-            .setTitle("Select Urgency Level")
-            .setItems(levels) { dialog, which ->
-                selectedLevel = levels[which]
-                binding.tvLevelSelect.text = selectedLevel
-                binding.tvLevelSelect.setTextColor(Color.BLACK)
-                dialog.dismiss()
-            }
-            .show()
+        val levs = arrayOf("High", "Medium", "Low")
+        AlertDialog.Builder(this).setItems(levs) { _, w ->
+            selectedLevel = levs[w]; binding.tvLevelSelect.text = selectedLevel
+        }.show()
     }
 
     private fun showDatePickerDialog() {
-        val calendar = Calendar.getInstance()
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-        val datePickerDialog = DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
-            val selectedCalendar = Calendar.getInstance().apply {
-                set(selectedYear, selectedMonth, selectedDay)
-            }
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            selectedDate = dateFormat.format(selectedCalendar.time)
-
+        val c = Calendar.getInstance()
+        DatePickerDialog(this, { _, y, m, d ->
+            selectedDate = String.format("%04d-%02d-%02d", y, m+1, d)
             binding.tvSetDate.text = selectedDate
-            binding.tvSetDate.setTextColor(Color.BLACK)
-        }, year, month, day)
-
-        datePickerDialog.show()
+        }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show()
     }
 
     private fun showTimePickerDialog() {
-        val calendar = Calendar.getInstance()
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-        val minute = calendar.get(Calendar.MINUTE)
-
-        val timePickerDialog = TimePickerDialog(this, { _, selectedHour, selectedMinute ->
-            selectedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
-
+        val c = Calendar.getInstance()
+        TimePickerDialog(this, { _, h, m ->
+            selectedTime = String.format("%02d:%02d", h, m)
             binding.tvSetTime.text = selectedTime
-            binding.tvSetTime.setTextColor(Color.BLACK)
-        }, hour, minute, true)
-
-        timePickerDialog.show()
+        }, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), true).show()
     }
 }

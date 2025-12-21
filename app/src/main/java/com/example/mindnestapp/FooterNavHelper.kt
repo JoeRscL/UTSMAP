@@ -8,32 +8,34 @@ import android.widget.Toast
 class FooterNavHelper(private val activity: Activity) {
 
     fun setupFooterNavigation() {
-        val navHome = activity.findViewById<LinearLayout>(R.id.navHome)
-        val navCalendar = activity.findViewById<LinearLayout>(R.id.navCalendar)
-        val navAdd = activity.findViewById<LinearLayout>(R.id.navAdd)
-        // **PERUBAHAN**: Menggunakan ID baru 'navProfile' dari layout footer
-        val navProfile = activity.findViewById<LinearLayout>(R.id.navProfile)
+        // Menggunakan ? (nullable) agar tidak crash jika ID tidak ditemukan di layout saat ini
+        val navHome = activity.findViewById<LinearLayout?>(R.id.navHome)
+        val navCalendar = activity.findViewById<LinearLayout?>(R.id.navCalendar)
+        val navAdd = activity.findViewById<LinearLayout?>(R.id.navAdd)
+        val navProfile = activity.findViewById<LinearLayout?>(R.id.navProfile)
+        val navMood = activity.findViewById<LinearLayout?>(R.id.navMood)
 
+        // --- SETUP LISTENERS ---
+        // Gunakan operator ?.setOnClickListener
 
-        navHome.setOnClickListener {
-            if (activity !is ScheduleActivity) {
+        navHome?.setOnClickListener {
+            if (activity !is ScheduleActivity) { // Asumsi Home diarahkan ke ScheduleActivity
                 val intent = Intent(activity, ScheduleActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 activity.startActivity(intent)
             }
         }
 
-        // 2. Tombol Calendar -> Mengarah ke ViewScheduleActivity (Kalender Dinamis)
-        navCalendar.setOnClickListener {
+        navCalendar?.setOnClickListener {
             if (activity !is ViewScheduleActivity) {
                 val intent = Intent(activity, ViewScheduleActivity::class.java)
                 activity.startActivity(intent)
             }
         }
 
-        // 3. Tombol Add -> Mengarah ke AddTaskActivity
-        navAdd.setOnClickListener {
+        navAdd?.setOnClickListener {
             if (activity is AddTaskActivity) {
+                // Logika khusus jika sedang di halaman AddTask (Mode Edit vs Baru)
                 val isEditMode = activity.intent.getBooleanExtra("isEditMode", false)
                 if (isEditMode) {
                     val intent = Intent(activity, AddTaskActivity::class.java)
@@ -47,8 +49,22 @@ class FooterNavHelper(private val activity: Activity) {
             }
         }
 
-        // 4. Tombol Profile (di footer) -> Mengarah ke ProfileActivity
-        navProfile.setOnClickListener {
+        // Logic Tombol Mood (AI Check)
+        navMood?.setOnClickListener {
+            // Cek apakah class MoodCheckActivity benar-benar ada
+            try {
+                if (activity !is MoodCheckActivity) {
+                    val intent = Intent(activity, MoodCheckActivity::class.java)
+                    activity.startActivity(intent)
+                }
+            } catch (e: Exception) {
+                // Tampilkan pesan error jika Activity belum dibuat/gagal dibuka
+                Toast.makeText(activity, "Error membuka Mood Check: ${e.message}", Toast.LENGTH_SHORT).show()
+                e.printStackTrace()
+            }
+        }
+
+        navProfile?.setOnClickListener {
             if (activity !is ProfileActivity) {
                 val intent = Intent(activity, ProfileActivity::class.java)
                 activity.startActivity(intent)

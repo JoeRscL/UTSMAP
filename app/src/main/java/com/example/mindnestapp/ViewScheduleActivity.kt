@@ -1,9 +1,11 @@
 package com.example.mindnestapp
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -20,46 +22,58 @@ import com.prolificinteractive.materialcalendarview.spans.DotSpan
 import java.text.SimpleDateFormat
 import java.util.*
 
-// Data class disesuaikan dengan data di Firebase
-data class ScheduleItem(
+// --- DATA CLASS ---
+data class Schedule(
+    var id: String? = null,
     val title: String = "",
     val description: String = "",
     val date: String = "",
     val time: String = "",
-    val priority: String = "", // High, Medium, Low
-    val category: String = "" // Work, Gym, Doctor, etc.
+    val priority: String = "",
+    val category: String = "",
+    val isCompleted: Boolean = false
 )
 
-// Class untuk Decorator (memberi titik pada kalender)
+// --- DECORATORS ---
+
 class EventDecorator(private val color: Int, dates: Collection<CalendarDay>) : DayViewDecorator {
     private val dates: HashSet<CalendarDay> = HashSet(dates)
     override fun shouldDecorate(day: CalendarDay): Boolean = dates.contains(day)
     override fun decorate(view: DayViewFacade) {
-        view.addSpan(DotSpan(7f, color))
+        view.addSpan(DotSpan(6f, color))
     }
 }
 
-// Decorator untuk Hari Libur
 class HolidayDecorator(private val holidays: Set<CalendarDay>) : DayViewDecorator {
-    override fun shouldDecorate(day: CalendarDay?): Boolean {
-        return day in holidays
-    }
-
-    override fun decorate(view: DayViewFacade?) {
-        view?.addSpan(android.text.style.ForegroundColorSpan(Color.RED))
-        view?.addSpan(android.text.style.StyleSpan(Typeface.BOLD))
+    override fun shouldDecorate(day: CalendarDay): Boolean = holidays.contains(day)
+    override fun decorate(view: DayViewFacade) {
+        view.addSpan(android.text.style.ForegroundColorSpan(Color.RED))
+        view.addSpan(android.text.style.StyleSpan(Typeface.BOLD))
     }
 }
+
+class TodayDecorator : DayViewDecorator {
+    private val date = CalendarDay.today()
+    override fun shouldDecorate(day: CalendarDay): Boolean = day == date
+    override fun decorate(view: DayViewFacade) {
+        view.addSpan(android.text.style.StyleSpan(Typeface.BOLD))
+    }
+}
+
+// --- ACTIVITY UTAMA ---
 
 class ViewScheduleActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityViewScheduleBinding
-    private lateinit var userSchedulesRef: DatabaseReference
-    private lateinit var holidaysRef: DatabaseReference
     private lateinit var auth: FirebaseAuth
-    private val allSchedules = mutableMapOf<String, MutableList<ScheduleItem>>()
-    private val holidays = mutableMapOf<String, String>() // Map untuk menyimpan ["2024-08-17", "Kemerdekaan RI"]
+    private lateinit var database: DatabaseReference
+    private lateinit var holidaysRef: DatabaseReference
+
+    private val allSchedules = mutableListOf<Schedule>()
+    private val holidayMap = mutableMapOf<String, String>()
+
     private lateinit var footerHelper: FooterNavHelper
+    private var selectedDateStr: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,100 +83,97 @@ class ViewScheduleActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         val currentUser = auth.currentUser
         if (currentUser == null) {
-            Toast.makeText(this, "User tidak terautentikasi.", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, login::class.java))
             finish()
             return
         }
 
-        // Path ke jadwal user
-        userSchedulesRef = FirebaseDatabase.getInstance().getReference("schedules").child(currentUser.uid)
-        // Path ke data hari libur
+        database = FirebaseDatabase.getInstance().getReference("schedules").child(currentUser.uid)
         holidaysRef = FirebaseDatabase.getInstance().getReference("holidays")
-
         footerHelper = FooterNavHelper(this)
+        footerHelper.setupFooterNavigation()
 
         setupCalendar()
-        setupListeners()
-        fetchDataFromFirebase() // Fungsi gabungan untuk fetch jadwal dan hari libur
-        footerHelper.setupFooterNavigation()
+        loadHolidaysAndSchedules()
     }
 
     private fun setupCalendar() {
-        binding.tvMonthYear.text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(binding.calendarView.currentDate.date)
-        binding.calendarView.selectedDate = CalendarDay.today()
-    }
+        // --- PERBAIKAN UTAMA DI SINI ---
+        // Matikan header bawaan lewat kode agar tidak error XML
+        binding.calendarView.topbarVisible = false
+        // --------------------------------
 
-    private fun setupListeners() {
+        val today = CalendarDay.today()
+        binding.calendarView.selectedDate = today
+
+        selectedDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+        binding.tvMonthYear.text = monthFormat.format(today.date)
+
         binding.calendarView.setOnMonthChangedListener { _, date ->
-            binding.tvMonthYear.text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(date.date)
-            // Fetch ulang hari libur jika berganti tahun
-            fetchHolidaysForYear(date.year)
+            binding.tvMonthYear.text = monthFormat.format(date.date)
         }
+
         binding.btnPrevMonth.setOnClickListener { binding.calendarView.goToPrevious() }
         binding.btnNextMonth.setOnClickListener { binding.calendarView.goToNext() }
+
         binding.calendarView.setOnDateChangedListener { _, date, selected ->
             if (selected) {
-                val selectedDateKey = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date.date)
-                showSchedulesForDate(selectedDateKey)
+                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                selectedDateStr = sdf.format(date.date)
+                displaySchedulesForDate(selectedDateStr)
             }
         }
+
         binding.btnViewAll.setOnClickListener {
-            Toast.makeText(this, "Fitur ini belum diimplementasikan", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Menampilkan semua event bulan ini", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun fetchDataFromFirebase() {
-        // Fetch jadwal user
-        userSchedulesRef.addValueEventListener(object : ValueEventListener {
+    private fun loadHolidaysAndSchedules() {
+        val currentYear = Calendar.getInstance().get(Calendar.YEAR).toString()
+
+        holidaysRef.child(currentYear).addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                allSchedules.clear()
-                for (scheduleSnapshot in snapshot.children) {
-                    val schedule = scheduleSnapshot.getValue(ScheduleItem::class.java)
-                    schedule?.let {
-                        if (it.date.isNotBlank()) {
-                            if (!allSchedules.containsKey(it.date)) {
-                                allSchedules[it.date] = mutableListOf()
-                            }
-                            allSchedules[it.date]?.add(it)
+                holidayMap.clear()
+                if (snapshot.exists()) {
+                    for (child in snapshot.children) {
+                        val dateKey = child.key
+                        val name = child.getValue(String::class.java)
+                        if (dateKey != null && name != null) {
+                            holidayMap[dateKey] = name
                         }
                     }
                 }
-                // Setelah jadwal ter-load, update kalender
-                updateCalendarDecorators()
-                // Tampilkan jadwal untuk hari ini
-                val todayKey = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                showSchedulesForDate(todayKey)
+                loadUserSchedules()
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@ViewScheduleActivity, "Gagal mengambil jadwal: ${error.message}", Toast.LENGTH_SHORT).show()
+                loadUserSchedules()
             }
         })
-
-        // Fetch hari libur untuk tahun ini
-        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-        fetchHolidaysForYear(currentYear)
     }
-    
-    private fun fetchHolidaysForYear(year: Int) {
-        holidaysRef.child(year.toString()).addListenerForSingleValueEvent(object : ValueEventListener {
+
+    private fun loadUserSchedules() {
+        database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                holidays.clear()
+                allSchedules.clear()
                 if (snapshot.exists()) {
-                    for (holidaySnapshot in snapshot.children) {
-                        val date = holidaySnapshot.key
-                        val name = holidaySnapshot.getValue(String::class.java)
-                        if (date != null && name != null) {
-                            holidays[date] = name
+                    for (child in snapshot.children) {
+                        val schedule = child.getValue(Schedule::class.java)
+                        schedule?.id = child.key
+                        if (schedule != null) {
+                            allSchedules.add(schedule)
                         }
                     }
                 }
-                // Setelah data libur ter-load, update kalender lagi
                 updateCalendarDecorators()
+                displaySchedulesForDate(selectedDateStr)
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@ViewScheduleActivity, "Gagal mengambil data hari libur.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ViewScheduleActivity, "Gagal memuat jadwal", Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -170,130 +181,134 @@ class ViewScheduleActivity : AppCompatActivity() {
     private fun updateCalendarDecorators() {
         binding.calendarView.removeDecorators()
 
-        // 1. Decorator untuk Hari Libur
-        val holidayDates = mutableSetOf<CalendarDay>()
-        holidays.keys.forEach { dateStr ->
-             try {
-                val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateStr)
-                date?.let { holidayDates.add(CalendarDay.from(it)) }
-            } catch (e: Exception) { }
+        val holidayDates = HashSet<CalendarDay>()
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+        holidayMap.keys.forEach { dateStr ->
+            try {
+                val date = sdf.parse(dateStr)
+                if (date != null) holidayDates.add(CalendarDay.from(date))
+            } catch (e: Exception) { e.printStackTrace() }
         }
         if (holidayDates.isNotEmpty()) {
             binding.calendarView.addDecorator(HolidayDecorator(holidayDates))
         }
 
-        // 2. Decorator untuk Jadwal User
-        val redDates = mutableSetOf<CalendarDay>()
-        val yellowDates = mutableSetOf<CalendarDay>()
-        val greenDates = mutableSetOf<CalendarDay>()
-        val blueDates = mutableSetOf<CalendarDay>()
+        val highPriorityDates = HashSet<CalendarDay>()
+        val normalDates = HashSet<CalendarDay>()
 
-        allSchedules.values.flatten().forEach { schedule ->
+        allSchedules.forEach { schedule ->
             try {
-                val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(schedule.date)
-                date?.let {
-                    val calendarDay = CalendarDay.from(it)
-                    // Jangan timpa dekorasi hari libur dengan titik jadwal
-                    if (!holidayDates.contains(calendarDay)) {
-                         val priority = schedule.priority.toLowerCase(Locale.ROOT)
-                        when {
-                            priority.contains("high") -> redDates.add(calendarDay)
-                            priority.contains("medium") -> yellowDates.add(calendarDay)
-                            priority.contains("low") -> greenDates.add(calendarDay)
-                            else -> blueDates.add(calendarDay)
-                        }
+                val date = sdf.parse(schedule.date)
+                if (date != null && !schedule.isCompleted) {
+                    val day = CalendarDay.from(date)
+                    if (schedule.priority.equals("high", ignoreCase = true)) {
+                        highPriorityDates.add(day)
+                    } else {
+                        normalDates.add(day)
                     }
                 }
-            } catch (e: Exception) { }
+            } catch (e: Exception) { e.printStackTrace() }
         }
-        
-        if (redDates.isNotEmpty()) binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#FF3B30"), redDates))
-        if (yellowDates.isNotEmpty()) binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#FFCC00"), yellowDates))
-        if (greenDates.isNotEmpty()) binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#34C759"), greenDates))
-        if (blueDates.isNotEmpty()) binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#007AFF"), blueDates))
+
+        if (highPriorityDates.isNotEmpty()) {
+            binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#FF3B30"), highPriorityDates))
+        }
+        if (normalDates.isNotEmpty()) {
+            binding.calendarView.addDecorator(EventDecorator(Color.parseColor("#007AFF"), normalDates))
+        }
+
+        binding.calendarView.addDecorator(TodayDecorator())
     }
 
-    private fun showSchedulesForDate(dateKey: String) {
+    private fun displaySchedulesForDate(dateStr: String) {
         binding.eventList.removeAllViews()
 
-        // Judul header
         try {
-            val parsedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateKey)
-            val formattedTitle = SimpleDateFormat("EEEE, d MMMM", Locale("id", "ID")).format(parsedDate)
-            binding.tvSelectedDate.text = "Acara pada $formattedTitle"
+            val dateObj = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateStr)
+            val headerFormat = SimpleDateFormat("EEEE, d MMMM yyyy", Locale("id", "ID"))
+            binding.tvSelectedDate.text = headerFormat.format(dateObj ?: Date())
         } catch (e: Exception) {
-            binding.tvSelectedDate.text = "Acara pada $dateKey"
+            binding.tvSelectedDate.text = dateStr
         }
-        
-        // Cek dan tampilkan jika hari ini libur
-        if (holidays.containsKey(dateKey)) {
-            val holidayName = holidays[dateKey]
+
+        if (holidayMap.containsKey(dateStr)) {
+            val holidayName = holidayMap[dateStr]
             val holidayView = TextView(this).apply {
-                text = "Hari Libur: $holidayName"
+                text = "Libur Nasional: $holidayName"
                 setTextColor(Color.RED)
+                textSize = 16f
                 setTypeface(null, Typeface.BOLD)
-                setPadding(0, 16, 0, 16)
+                setPadding(0, 0, 0, 24)
             }
             binding.eventList.addView(holidayView)
         }
 
-        val schedulesForDate = allSchedules[dateKey]
+        val filteredList = allSchedules.filter { it.date == dateStr && !it.isCompleted }.sortedBy { it.time }
 
-        if (schedulesForDate.isNullOrEmpty()) {
-             if (!holidays.containsKey(dateKey)) { // Hanya tampilkan jika bukan hari libur
-                val noEventView = layoutInflater.inflate(R.layout.item_no_schedule, binding.eventList, false)
-                binding.eventList.addView(noEventView)
+        if (filteredList.isEmpty()) {
+            if (!holidayMap.containsKey(dateStr)) {
+                try {
+                    val emptyView = layoutInflater.inflate(R.layout.item_no_schedule, binding.eventList, false)
+                    binding.eventList.addView(emptyView)
+                } catch (e: Exception) {
+                    val tvEmpty = TextView(this)
+                    tvEmpty.text = "Tidak ada jadwal."
+                    tvEmpty.setTextColor(Color.GRAY)
+                    binding.eventList.addView(tvEmpty)
+                }
             }
         } else {
-            schedulesForDate.sortBy { it.time }
+            for (schedule in filteredList) {
+                val itemView = layoutInflater.inflate(R.layout.item_schedule_home, binding.eventList, false)
 
-            schedulesForDate.forEach { schedule ->
-                val itemView = layoutInflater.inflate(R.layout.item_schedule, binding.eventList, false)
-
-                val itemRoot = itemView.findViewById<LinearLayout>(R.id.itemRoot)
-                val priorityDot = itemView.findViewById<ImageView>(R.id.priorityDot)
                 val tvTitle = itemView.findViewById<TextView>(R.id.tvTitle)
                 val tvTime = itemView.findViewById<TextView>(R.id.tvTime)
-                val ivCategoryIcon = itemView.findViewById<ImageView>(R.id.ivCategoryIcon)
+                val ivPriority = itemView.findViewById<ImageView>(R.id.ivPriority)
+                val ivCategory = itemView.findViewById<ImageView>(R.id.ivCategory)
+                val container = itemView as LinearLayout
 
                 tvTitle.text = schedule.title
                 tvTime.text = schedule.time
 
-                // Set Priority Colors and Background
-                val priority = schedule.priority.toLowerCase(Locale.ROOT)
                 val bgDrawable = ContextCompat.getDrawable(this, R.drawable.bg_card)?.mutate() as? GradientDrawable
 
-                when {
-                    priority.contains("high") -> {
-                        priorityDot.setImageResource(R.drawable.priority_dot_red)
+                when (schedule.priority.lowercase(Locale.getDefault())) {
+                    "high" -> {
+                        ivPriority.setImageResource(R.drawable.priority_dot_red)
                         bgDrawable?.setColor(ContextCompat.getColor(this, R.color.priority_high_bg))
                     }
-                    priority.contains("medium") -> {
-                        priorityDot.setImageResource(R.drawable.priority_dot_yellow)
+                    "medium" -> {
+                        ivPriority.setImageResource(R.drawable.priority_dot_yellow)
                         bgDrawable?.setColor(ContextCompat.getColor(this, R.color.priority_medium_bg))
                     }
-                    priority.contains("low") -> {
-                        priorityDot.setImageResource(R.drawable.priority_dot_green)
+                    "low" -> {
+                        ivPriority.setImageResource(R.drawable.priority_dot_green)
                         bgDrawable?.setColor(ContextCompat.getColor(this, R.color.priority_low_bg))
                     }
                     else -> {
-                        priorityDot.setImageResource(R.drawable.priority_dot_blue)
+                        ivPriority.setImageResource(R.drawable.priority_dot_blue)
                         bgDrawable?.setColor(ContextCompat.getColor(this, R.color.priority_default_bg))
                     }
                 }
-                itemRoot.background = bgDrawable
+                container.background = bgDrawable
 
-                // Set Category Icon
-                val category = schedule.category.toLowerCase(Locale.ROOT)
-                val iconRes = when {
-                    category.contains("work") -> R.drawable.ic_work
-                    category.contains("gym") -> R.drawable.ic_gym
-                    category.contains("doctor") -> R.drawable.ic_doctor
-                    category.contains("study") -> R.drawable.ic_file
-                    category.contains("home") -> R.drawable.ic_home
+                val categoryIcon = when (schedule.category.lowercase(Locale.getDefault())) {
+                    "work" -> R.drawable.ic_work
+                    "gym" -> R.drawable.ic_gym
+                    "doctor" -> R.drawable.ic_doctor
+                    "study" -> R.drawable.ic_file
+                    "home" -> R.drawable.ic_home
                     else -> R.drawable.ic_calendar
                 }
-                ivCategoryIcon.setImageResource(iconRes)
+                ivCategory.setImageResource(categoryIcon)
+
+                itemView.setOnClickListener {
+                    val intent = Intent(this, AddTaskActivity::class.java)
+                    intent.putExtra("taskId", schedule.id)
+                    intent.putExtra("isEditMode", true)
+                    startActivity(intent)
+                }
 
                 binding.eventList.addView(itemView)
             }

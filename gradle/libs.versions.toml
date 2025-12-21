@@ -34,6 +34,8 @@ uiTestManifest = "1.4.0"
 materialCalendarview = "2.0.1"
 firebaseBom = "33.0.0"
 composeBomVersion = "2024.04.00"
+tensorflowLiteSupport = "0.5.0"
+tensorflowLiteMetadata = "0.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -76,6 +78,8 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 material-calendarview = { group = "com.github.prolificinteractive", name = "material-calendarview", version.ref = "materialCalendarview" }
 firebase-bom = { group = "platform(", name = "firebase-bom", version.ref = "firebaseBom" }
 compose-bom = { group = "platform(", name = "compose-bom", version.ref = "composeBomVersion" }
+tensorflow-lite-support = { group = "org.tensorflow", name = "tensorflow-lite-support", version.ref = "tensorflowLiteSupport" }
+tensorflow-lite-metadata = { group = "org.tensorflow", name = "tensorflow-lite-metadata", version.ref = "tensorflowLiteMetadata" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

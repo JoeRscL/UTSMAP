@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
-    android:background="@drawable/bg_card"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:padding="16dp">
@@ -30,8 +30,8 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="Team Meeting"
-            android:textColor="?attr/textColorPrimary" 
+            tools:text="Team Meeting"
+            android:textColor="#000000"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -40,8 +40,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="9:00 AM - 10:30 AM"
-            android:textColor="?attr/textColorSecondary" 
+            tools:text="9:00 AM - 10:30 AM"
+            android:textColor="#616161"
             android:textSize="12sp" />
     </LinearLayout>
 
@@ -51,6 +51,7 @@
         android:layout_height="24dp"
         android:contentDescription="Category"
         android:src="@drawable/ic_work"
-        tools:src="@drawable/ic_default_profile" />
+        app:tint="#424242"
+        tools:src="@drawable/ic_work" />
 
 </LinearLayout>
